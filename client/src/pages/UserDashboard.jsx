@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Calendar, Heart, ArrowRight, Clock, MapPin, Star,
-    Flame, Trophy, Activity, Dumbbell, Settings
+    Flame, Trophy, Activity, Dumbbell, Settings, Plus, X
 } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
@@ -17,6 +17,9 @@ export default function UserDashboard() {
     const [wishlist, setWishlist] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedBooking, setSelectedBooking] = useState(null);
+    const [metrics, setMetrics] = useState([]);
+    const [showMetricModal, setShowMetricModal] = useState(false);
+    const [newMetric, setNewMetric] = useState({ height: '', weight: '' });
 
     useEffect(() => {
         fetchData();
@@ -42,11 +45,41 @@ export default function UserDashboard() {
                 setWishlist(wishlistRes.data.wishlist || []);
             }
 
+            if (activeTab === 'health' || activeTab === 'overview') {
+                const metricsRes = await api.get('/users/metrics', { headers });
+                setMetrics(metricsRes.data.metrics || []);
+            }
+
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRecordMetric = async (e) => {
+        e.preventDefault();
+        try {
+            const token = await getToken();
+            await api.post('/users/metrics', newMetric, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setShowMetricModal(false);
+            setNewMetric({ height: '', weight: '' });
+            fetchData();
+        } catch (error) {
+            console.error('Error recording metrics:', error);
+            alert(error.response?.data?.error || 'Failed to record metrics');
+        }
+    };
+
+    const latestMetric = metrics[0] || null;
+
+    const getBMICategory = (bmi) => {
+        if (bmi < 18.5) return { label: 'Underweight', color: '#60A5FA' };
+        if (bmi < 25) return { label: 'Normal', color: '#34D399' };
+        if (bmi < 30) return { label: 'Overweight', color: '#F59E0B' };
+        return { label: 'Obese', color: '#EF4444' };
     };
 
     const nextSession = stats?.nextSession;
@@ -139,6 +172,19 @@ export default function UserDashboard() {
                             <p style={styles.statLabel}>Active Streak</p>
                         </div>
                     </div>
+                    {latestMetric && (
+                        <div style={styles.statCard}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(139, 92, 246, 0.2)', color: '#A78BFA' }}>
+                                <Activity size={24} />
+                            </div>
+                            <div>
+                                <h3 style={styles.statValue}>{latestMetric.bmi}</h3>
+                                <p style={{ ...styles.statLabel, color: getBMICategory(latestMetric.bmi).color }}>
+                                    BMI: {getBMICategory(latestMetric.bmi).label}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Navigation Tabs */}
@@ -160,6 +206,12 @@ export default function UserDashboard() {
                         style={activeTab === 'wishlist' ? styles.activeTab : styles.tab}
                     >
                         Wishlist ({wishlist.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('health')}
+                        style={activeTab === 'health' ? styles.activeTab : styles.tab}
+                    >
+                        Health Stats
                     </button>
                 </div>
 
@@ -275,9 +327,113 @@ export default function UserDashboard() {
                             )}
                         </div>
                     )}
+                    {/* HEALTH STATS TAB */}
+                    {activeTab === 'health' && (
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                <h3 style={styles.sectionTitle}>Your Fitness Journey</h3>
+                                <button
+                                    onClick={() => setShowMetricModal(true)}
+                                    style={{ ...styles.viewBtn, width: 'auto', padding: '0.6rem 1.2rem', background: '#fff', color: '#000' }}
+                                >
+                                    <Plus size={16} /> Update Stats
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                                {/* Current Stats Card */}
+                                <div style={styles.card}>
+                                    <h4 style={{ color: '#888', marginBottom: '1rem', fontSize: '0.9rem' }}>CURRENT STATUS</h4>
+                                    {latestMetric ? (
+                                        <>
+                                            <div style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '0.5rem' }}>{latestMetric.bmi}</div>
+                                            <div style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '99px', background: getBMICategory(latestMetric.bmi).color + '20', color: getBMICategory(latestMetric.bmi).color, fontWeight: 700, fontSize: '0.8rem', marginBottom: '1.5rem' }}>
+                                                {getBMICategory(latestMetric.bmi).label.toUpperCase()}
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <div style={{ background: '#27272a', padding: '1rem', borderRadius: '8px' }}>
+                                                    <span style={{ display: 'block', color: '#888', fontSize: '0.75rem' }}>WEIGHT</span>
+                                                    <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{latestMetric.weight} kg</span>
+                                                </div>
+                                                <div style={{ background: '#27272a', padding: '1rem', borderRadius: '8px' }}>
+                                                    <span style={{ display: 'block', color: '#888', fontSize: '0.75rem' }}>HEIGHT</span>
+                                                    <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{latestMetric.height} cm</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                                            <p style={{ color: '#666' }}>No records yet. Start tracking your progress!</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* History List */}
+                                <div style={styles.card}>
+                                    <h4 style={{ color: '#888', marginBottom: '1rem', fontSize: '0.9rem' }}>RECENT RECORDS</h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {metrics.slice(0, 5).map(m => (
+                                            <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid #27272a' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: 600 }}>BMI: {m.bmi}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#666' }}>{new Date(m.recorded_at).toLocaleDateString()}</div>
+                                                </div>
+                                                <div style={{ textAlign: 'right', fontSize: '0.85rem' }}>
+                                                    <div>{m.weight}kg</div>
+                                                    <div style={{ color: '#666' }}>{m.height}cm</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {metrics.length === 0 && <p style={{ color: '#666', fontStyle: 'italic' }}>No history available.</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
             {selectedBooking && <ReviewModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} onSuccess={() => { fetchData(); setSelectedBooking(null); }} />}
+
+            {/* Metric Modal */}
+            {showMetricModal && (
+                <div style={styles.modalOverlay}>
+                    <div style={{ ...styles.card, width: '90%', maxWidth: '400px', position: 'relative' }}>
+                        <button
+                            onClick={() => setShowMetricModal(false)}
+                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}
+                        >
+                            <X size={20} />
+                        </button>
+                        <h3 style={{ marginBottom: '1.5rem' }}>Update Health Stats</h3>
+                        <form onSubmit={handleRecordMetric}>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <label style={{ display: 'block', color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Weight (kg)</label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    required
+                                    style={styles.formInput}
+                                    value={newMetric.weight}
+                                    onChange={e => setNewMetric({ ...newMetric, weight: e.target.value })}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '2rem' }}>
+                                <label style={{ display: 'block', color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Height (cm)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    style={styles.formInput}
+                                    value={newMetric.height}
+                                    onChange={e => setNewMetric({ ...newMetric, height: e.target.value })}
+                                />
+                            </div>
+                            <button type="submit" style={{ ...styles.viewBtn, background: '#fff', color: '#000', border: 'none' }}>
+                                Save Progress
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -343,4 +499,9 @@ const styles = {
     wishlistInfo: { padding: '1rem' },
     emptyState: { gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', background: '#1a1a1a', borderRadius: '12px' },
     link: { color: '#3b82f6', textDecoration: 'underline', marginTop: '1rem', display: 'inline-block' },
+
+    // Metrics Modal/Style
+    modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' },
+    card: { background: '#1a1a1a', border: '1px solid #27272a', borderRadius: '16px', padding: '2rem' },
+    formInput: { width: '100%', background: '#27272a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem', color: '#fff', outline: 'none', transition: 'border-color 0.2s' }
 };

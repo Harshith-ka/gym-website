@@ -7,6 +7,8 @@ import {
     addToWishlist,
     removeFromWishlist,
     getUserStats,
+    getUserMetrics,
+    recordMetrics
 } from '../controllers/userController.js';
 import { authMiddleware, syncUserMiddleware } from '../middleware/auth.js';
 
@@ -23,5 +25,7 @@ router.get('/wishlist', getWishlist);
 router.post('/wishlist', addToWishlist);
 router.delete('/wishlist/:gymId', removeFromWishlist);
 router.get('/stats', getUserStats);
+router.get('/metrics', getUserMetrics);
+router.post('/metrics', recordMetrics);
 
 export default router;

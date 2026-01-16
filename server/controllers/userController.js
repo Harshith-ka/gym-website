@@ -270,3 +270,45 @@ export const getUserStats = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch user stats' });
     }
 };
+
+// User Metrics (BMI Stats)
+export const getUserMetrics = async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM user_metrics WHERE user_id = $1 ORDER BY recorded_at DESC',
+            [req.user.id]
+        );
+        res.json({ metrics: result.rows });
+    } catch (error) {
+        console.error('Get metrics error:', error);
+        res.status(500).json({ error: 'Failed to fetch health metrics' });
+    }
+};
+
+export const recordMetrics = async (req, res) => {
+    try {
+        const { weight, height } = req.body;
+        if (!weight || !height) {
+            return res.status(400).json({ error: 'Weight and height are required' });
+        }
+
+        // BMI Formula: weight (kg) / [height (m)]^2
+        const heightInMeters = height / 100;
+        const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(2);
+
+        const result = await pool.query(
+            `INSERT INTO user_metrics (user_id, weight, height, bmi)
+             VALUES ($1, $2, $3, $4)
+             RETURNING *`,
+            [req.user.id, weight, height, bmi]
+        );
+
+        res.status(201).json({
+            message: 'Metrics recorded successfully',
+            metric: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Record metrics error:', error);
+        res.status(500).json({ error: 'Failed to record health metrics' });
+    }
+};

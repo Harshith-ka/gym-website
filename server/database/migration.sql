@@ -72,3 +72,13 @@ CREATE TABLE IF NOT EXISTS ads_promotions (
 
 -- Update featured_listings to link better with ads if needed
 ALTER TABLE featured_listings ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';
+
+-- 6. User Health Metrics (BMI Stats)
+CREATE TABLE IF NOT EXISTS user_metrics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    weight DECIMAL(10, 2) NOT NULL,
+    height DECIMAL(10, 2) NOT NULL,
+    bmi DECIMAL(10, 2) NOT NULL,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
