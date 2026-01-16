@@ -217,11 +217,17 @@ export default function GymDashboard() {
         await handleVerifyDirect(qrCode);
     };
 
-    const handleVerifyDirect = async (code) => {
+    const handleVerifyDirect = async (inputCode) => {
         try {
             setLoading(true);
             setVerifyResult(null);
             const token = await getToken();
+
+            // Handle full URLs from hardware scanners
+            let code = inputCode.trim();
+            if (code.includes('/verify/')) {
+                code = code.split('/verify/').pop();
+            }
 
             // Payload now just sends the code (can be UUID, shortCode, or QR token)
             const response = await api.post('/bookings/validate-qr', { code }, {
@@ -754,6 +760,9 @@ export default function GymDashboard() {
                                                 placeholder="ENTER 6-DIGIT CODE OR UUID"
                                                 value={qrCode}
                                                 onChange={e => setQrCode(e.target.value.toUpperCase())}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleVerifyBooking();
+                                                }}
                                             />
                                         </div>
                                         <button onClick={handleVerifyBooking} style={{ ...styles.primaryBtn, width: '100%', justifyContent: 'center' }}>Verify Manually</button>
