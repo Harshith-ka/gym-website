@@ -16,10 +16,8 @@ import GymDashboard from './pages/GymDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Categories from './pages/Categories';
 import GymRegistration from './pages/GymRegistration';
-import HowItWorks from './pages/HowItWorks';
-import Contact from './pages/Contact';
-import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import VerifyBooking from './pages/VerifyBooking';
 import './index.css';
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -79,6 +77,7 @@ function App() {
                             <Route path="/contact" element={<Contact />} />
                             <Route path="/terms" element={<Terms />} />
                             <Route path="/privacy" element={<Privacy />} />
+                            <Route path="/verify/:token" element={<VerifyBooking />} />
 
                             {/* Protected Routes */}
                             <Route

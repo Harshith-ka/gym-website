@@ -140,7 +140,11 @@ export const createBooking = async (req, res) => {
 
         // Generate QR code data
         const qrData = crypto.randomBytes(32).toString('hex');
-        const qrCodeImage = await QRCode.toDataURL(qrData);
+        const shortCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        // The QR code should redirect anyone who scans it to a public verification page
+        const qrUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify/${qrData}`;
+        const qrCodeImage = await QRCode.toDataURL(qrUrl);
 
         // Calculate expiry
         let expiresAt;
@@ -168,14 +172,14 @@ export const createBooking = async (req, res) => {
         const bookingResult = await client.query(
             `INSERT INTO bookings (
         user_id, gym_id, service_id, trainer_id, booking_type, booking_date,
-        start_time, end_time, qr_code, qr_code_image, total_amount,
+        start_time, end_time, qr_code, qr_code_image, short_code, total_amount,
         platform_commission, gym_earnings, trainer_earnings, payment_id, expires_at,
         total_sessions, remaining_sessions
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *`,
             [
                 req.user.id, gymId, serviceId, trainerId || null, service.service_type, bookingDate,
-                startTime, finalEndTime, qrData, qrCodeImage, totalAmount,
+                startTime, finalEndTime, qrData, qrCodeImage, shortCode, totalAmount,
                 platformCommission, gymEarnings, trainerEarnings, razorpayOrder.id, expiresAt,
                 service.session_count || 1, service.session_count || 1
             ]
@@ -299,95 +303,101 @@ export const verifyPayment = async (req, res) => {
     }
 };
 
-// Get Booking Details
-export const getBookingDetails = async (req, res) => {
+// Publicly Get Booking Details (Scan verification)
+export const getPublicBookingDetails = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { token } = req.params;
 
         const result = await pool.query(
-            `SELECT b.*, g.name as gym_name, g.address, g.images, gs.name as service_name,
-                    u.name as trainer_name
-       FROM bookings b
-       JOIN gyms g ON b.gym_id = g.id
-       LEFT JOIN gym_services gs ON b.service_id = gs.id
-       LEFT JOIN trainers t ON b.trainer_id = t.id
-       LEFT JOIN users u ON t.user_id = u.id
-       WHERE b.id = $1 AND b.user_id = $2`,
-            [id, req.user.id]
+            `SELECT b.status, b.booking_date, b.start_time, b.end_time, b.booking_type,
+                    u.name as user_name, g.name as gym_name, gs.name as service_name
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN gyms g ON b.gym_id = g.id
+             LEFT JOIN gym_services gs ON b.service_id = gs.id
+             WHERE b.qr_code = $1`,
+            [token]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Booking not found' });
+            return res.status(404).json({ error: 'Invalid verification token' });
         }
 
         res.json({ booking: result.rows[0] });
     } catch (error) {
-        console.error('Get booking details error:', error);
-        res.status(500).json({ error: 'Failed to fetch booking' });
+        console.error('Public verification error:', error);
+        res.status(500).json({ error: 'Verification failed' });
     }
 };
 
-// Validate QR Code (Gym Staff)
+// Validate QR/Short Code (Lookup for Staff)
 export const validateQRCode = async (req, res) => {
     try {
-        const { qrCode } = req.body;
+        const { code } = req.body; // Can be token or 6-digit shortCode
 
-        if (!qrCode) {
-            return res.status(400).json({ error: 'QR code required' });
+        if (!code) {
+            return res.status(400).json({ error: 'Code required' });
         }
 
         const result = await pool.query(
-            `SELECT b.*, u.name as user_name, u.phone as user_phone, g.name as gym_name
-       FROM bookings b
-       JOIN users u ON b.user_id = u.id
-       JOIN gyms g ON b.gym_id = g.id
-       WHERE b.qr_code = $1`,
-            [qrCode]
+            `SELECT b.*, u.name as user_name, u.phone as user_phone, g.name as gym_name, gs.name as service_name
+             FROM bookings b
+             JOIN users u ON b.user_id = u.id
+             JOIN gyms g ON b.gym_id = g.id
+             LEFT JOIN gym_services gs ON b.service_id = gs.id
+             WHERE b.qr_code = $1 OR b.short_code = $1`,
+            [code]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Invalid QR code' });
+            return res.status(404).json({ error: 'Invalid booking code' });
         }
 
         const booking = result.rows[0];
 
-        // Check if booking is valid
-        if (booking.status === 'used') {
-            return res.status(400).json({ error: 'Booking already used' });
+        // Ensure the requester is the owner of this gym
+        if (req.user.role === 'gym_owner' || req.user.role === 'admin') {
+            const gymCheck = await pool.query('SELECT id FROM gyms WHERE id = $1 AND owner_id = $2', [booking.gym_id, req.user.id]);
+            if (gymCheck.rows.length === 0 && req.user.role !== 'admin') {
+                return res.status(403).json({ error: 'Not authorized for this gym' });
+            }
         }
-
-        if (booking.status === 'cancelled') {
-            return res.status(400).json({ error: 'Booking cancelled' });
-        }
-
-        if (booking.payment_status !== 'completed') {
-            return res.status(400).json({ error: 'Payment not completed' });
-        }
-
-        if (new Date(booking.expires_at) < new Date()) {
-            return res.status(400).json({ error: 'Booking expired' });
-        }
-
-        // Mark as used
-        await pool.query(
-            'UPDATE bookings SET status = $1, used_at = NOW() WHERE id = $2',
-            ['used', booking.id]
-        );
 
         res.json({
-            message: 'Booking validated successfully',
-            booking: {
-                id: booking.id,
-                userName: booking.user_name,
-                userPhone: booking.user_phone,
-                gymName: booking.gym_name,
-                bookingDate: booking.booking_date,
-                serviceType: booking.booking_type,
-            },
+            message: 'Booking found',
+            booking: booking
         });
     } catch (error) {
-        console.error('Validate QR code error:', error);
-        res.status(500).json({ error: 'Failed to validate QR code' });
+        console.error('Validate code error:', error);
+        res.status(500).json({ error: 'Failed to validate code' });
+    }
+};
+
+// Manually Complete Booking (Owner only)
+export const completeBooking = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify ownership
+        const bookingRes = await pool.query('SELECT gym_id FROM bookings WHERE id = $1', [id]);
+        if (bookingRes.rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
+
+        const gymId = bookingRes.rows[0].gym_id;
+        const ownerCheck = await pool.query('SELECT id FROM gyms WHERE id = $1 AND owner_id = $2', [gymId, req.user.id]);
+
+        if (ownerCheck.rows.length === 0 && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Not authorized to complete this booking' });
+        }
+
+        await pool.query(
+            'UPDATE bookings SET status = $1, used_at = NOW() WHERE id = $2',
+            ['used', id]
+        );
+
+        res.json({ message: 'Booking marked as completed' });
+    } catch (error) {
+        console.error('Complete booking error:', error);
+        res.status(500).json({ error: 'Failed to update booking' });
     }
 };
 

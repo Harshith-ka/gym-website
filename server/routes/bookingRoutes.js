@@ -4,19 +4,25 @@ import {
     verifyPayment,
     getBookingDetails,
     validateQRCode,
+    getPublicBookingDetails,
+    completeBooking,
     cancelBooking,
 } from '../controllers/bookingController.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// Public route - No auth required
+router.get('/public/:token', getPublicBookingDetails);
+
+// Auth protected routes
 router.use(authMiddleware);
 
 router.post('/', createBooking);
 router.post('/verify-payment', verifyPayment);
 router.get('/:id', getBookingDetails);
 router.post('/validate-qr', validateQRCode);
+router.put('/:id/complete', completeBooking);
 router.put('/:id/cancel', cancelBooking);
 
 export default router;

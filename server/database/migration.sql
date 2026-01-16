@@ -82,3 +82,6 @@ CREATE TABLE IF NOT EXISTS user_metrics (
     bmi DECIMAL(10, 2) NOT NULL,
     recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 7. Add short_code to bookings for manual verification
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS short_code VARCHAR(6);

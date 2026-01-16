@@ -78,7 +78,7 @@ export default function BookingConfirmation() {
                     <div style={{ ...styles.qrContainer, position: 'relative' }}>
                         <QRCodeSVG
                             id="qr-code"
-                            value={booking.qr_code}
+                            value={`${window.location.origin}/verify/${booking.qr_code}`}
                             size={250}
                             level="H"
                             includeMargin={true}
@@ -112,6 +112,14 @@ export default function BookingConfirmation() {
                             </div>
                         )}
                     </div>
+
+                    {/* Manual Code Section */}
+                    <div style={styles.shortCodeContainer}>
+                        <span style={styles.shortCodeLabel}>Manual Entry Code</span>
+                        <div style={styles.shortCodeBox}>{booking.short_code}</div>
+                        <p style={styles.shortCodeHint}>Share this if QR scanning is not available</p>
+                    </div>
+
                     <button onClick={downloadQR} className="btn btn-outline" style={{ width: '100%' }}>
                         <Download size={18} />
                         Download QR Code
@@ -301,6 +309,35 @@ const styles = {
         height: '1px',
         background: 'var(--border)',
         margin: '1.5rem 0',
+    },
+    shortCodeContainer: {
+        marginTop: '1rem',
+        marginBottom: '1.5rem',
+        textAlign: 'center',
+    },
+    shortCodeLabel: {
+        fontSize: '0.75rem',
+        color: 'var(--text-secondary)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        fontWeight: 600,
+        display: 'block',
+        marginBottom: '0.5rem',
+    },
+    shortCodeBox: {
+        fontSize: '1.75rem',
+        fontWeight: 800,
+        letterSpacing: '0.2em',
+        color: '#fff',
+        background: 'rgba(255,255,255,0.05)',
+        padding: '0.5rem',
+        borderRadius: '8px',
+        border: '1px dashed #444',
+    },
+    shortCodeHint: {
+        fontSize: '0.7rem',
+        color: '#666',
+        marginTop: '0.5rem',
     },
     notesCard: {
         padding: '2rem',

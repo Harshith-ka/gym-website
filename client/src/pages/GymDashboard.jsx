@@ -222,21 +222,43 @@ export default function GymDashboard() {
             setLoading(true);
             setVerifyResult(null);
             const token = await getToken();
-            // Try as QR code first, then as booking ID if looks like UUID
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code);
-            const payload = isUuid ? { bookingId: code } : { qrCode: code };
 
-            const response = await api.post('/admin/gym/verify-booking', payload, {
+            // Payload now just sends the code (can be UUID, shortCode, or QR token)
+            const response = await api.post('/bookings/validate-qr', { code }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setVerifyResult({ success: true, ...response.data });
-            fetchDashboardData();
         } catch (error) {
             console.error('Verification error:', error);
             setVerifyResult({
                 success: false,
                 error: error.response?.data?.error || 'Verification failed'
             });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCompleteBooking = async (bookingId) => {
+        try {
+            setLoading(true);
+            const token = await getToken();
+            await api.put(`/bookings/${bookingId}/complete`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            // Refresh result to show it's used
+            if (verifyResult && verifyResult.booking.id === bookingId) {
+                setVerifyResult({
+                    ...verifyResult,
+                    booking: { ...verifyResult.booking, status: 'used' }
+                });
+            }
+            fetchDashboardData();
+            alert('Booking marked as completed!');
+        } catch (error) {
+            console.error('Completion error:', error);
+            alert(error.response?.data?.error || 'Failed to complete booking');
         } finally {
             setLoading(false);
         }
@@ -728,10 +750,10 @@ export default function GymDashboard() {
 
                                         <div style={styles.formGroup}>
                                             <input
-                                                style={{ ...styles.input, textAlign: 'center', fontSize: '1.1rem', letterSpacing: '1px' }}
-                                                placeholder="ENTER BOOKING ID (UUID)"
+                                                style={{ ...styles.input, textAlign: 'center', fontSize: '1.2rem', letterSpacing: '4px', textTransform: 'uppercase' }}
+                                                placeholder="ENTER 6-DIGIT CODE OR UUID"
                                                 value={qrCode}
-                                                onChange={e => setQrCode(e.target.value)}
+                                                onChange={e => setQrCode(e.target.value.toUpperCase())}
                                             />
                                         </div>
                                         <button onClick={handleVerifyBooking} style={{ ...styles.primaryBtn, width: '100%', justifyContent: 'center' }}>Verify Manually</button>
@@ -741,8 +763,8 @@ export default function GymDashboard() {
                                                 marginTop: '2rem',
                                                 padding: '1.5rem',
                                                 borderRadius: '0.75rem',
-                                                background: !verifyResult.success ? '#450a0a' : '#052e16',
-                                                border: `1px solid ${!verifyResult.success ? '#7f1d1d' : '#065f46'}`,
+                                                background: !verifyResult.success ? '#450a0a' : (verifyResult.booking.status === 'used' ? '#111' : '#052e16'),
+                                                border: `1px solid ${!verifyResult.success ? '#7f1d1d' : (verifyResult.booking.status === 'used' ? '#333' : '#065f46')}`,
                                                 animation: 'fadeIn 0.3s ease-out'
                                             }}>
                                                 {!verifyResult.success ? (
@@ -754,17 +776,39 @@ export default function GymDashboard() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                        <div style={{ color: '#86efac' }}><Check size={32} /></div>
-                                                        <div style={{ flex: 1 }}>
-                                                            <div style={{ color: '#86efac', fontWeight: 'bold', fontSize: '1.1rem' }}>Entry Granted!</div>
-                                                            <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 600 }}>{verifyResult.booking.user_name}</div>
-                                                            <div style={{ color: '#a1a1aa', fontSize: '0.85rem' }}>{verifyResult.booking.service_name} • {verifyResult.booking.booking_type.toUpperCase()}</div>
+                                                    <div>
+                                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+                                                            <div style={{ color: verifyResult.booking.status === 'used' ? '#666' : '#86efac' }}>
+                                                                {verifyResult.booking.status === 'used' ? <Clock size={32} /> : <Check size={32} />}
+                                                            </div>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ color: verifyResult.booking.status === 'used' ? '#666' : '#86efac', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                                    {verifyResult.booking.status === 'used' ? 'Booking Already Completed' : 'Booking Found'}
+                                                                </div>
+                                                                <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 600 }}>{verifyResult.booking.user_name}</div>
+                                                                <div style={{ color: '#a1a1aa', fontSize: '0.85rem' }}>{verifyResult.booking.service_name} • {verifyResult.booking.booking_type?.toUpperCase()}</div>
+                                                            </div>
                                                         </div>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '0.7rem', color: '#a1a1aa' }}>SESSION TIME</div>
-                                                            <div style={{ color: 'white', fontWeight: 'bold' }}>{verifyResult.booking.start_time.slice(0, 5)}</div>
+
+                                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                                                <span style={{ color: '#555', fontSize: '0.8rem' }}>DATE</span>
+                                                                <span style={{ color: '#fff' }}>{new Date(verifyResult.booking.booking_date).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span style={{ color: '#555', fontSize: '0.8rem' }}>SLOT</span>
+                                                                <span style={{ color: '#fff' }}>{verifyResult.booking.start_time?.slice(0, 5)} - {verifyResult.booking.end_time?.slice(0, 5)}</span>
+                                                            </div>
                                                         </div>
+
+                                                        {verifyResult.booking.status === 'confirmed' && (
+                                                            <button
+                                                                onClick={() => handleCompleteBooking(verifyResult.booking.id)}
+                                                                style={{ ...styles.primaryBtn, width: '100%', justifyContent: 'center', background: '#10B981', color: '#000' }}
+                                                            >
+                                                                Confirm Entry & Mark Completed
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
