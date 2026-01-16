@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Star, Loader2 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '@clerk/clerk-react';

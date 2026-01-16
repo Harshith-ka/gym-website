@@ -118,12 +118,12 @@ export const searchGyms = async (req, res) => {
         }
 
         // Order by featured first, then rating
-        query += ` ORDER BY g.is_featured DESC, g.rating DESC, g.created_at DESC`;
-
-        // Pagination
-        const offset = (page - 1) * limit;
-        query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-        params.push(limit, offset);
+        if (!latitude || !longitude) {
+            query += ` ORDER BY g.is_featured DESC, g.rating DESC, g.created_at DESC`;
+            const offset = (page - 1) * limit;
+            query += ` LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+            params.push(limit, offset);
+        }
 
         const result = await pool.query(query, params);
         let gyms = result.rows;
@@ -138,25 +138,48 @@ export const searchGyms = async (req, res) => {
             });
         }
 
+        let searchExpanded = false;
+
         // Filter by distance if coordinates provided
         if (latitude && longitude) {
-            gyms = gyms.filter(gym => {
-                if (!gym.latitude || !gym.longitude) return false;
+            const initialRadius = parseFloat(radius);
+
+            // Map distances to all gyms
+            gyms = gyms.map(gym => {
+                if (!gym.latitude || !gym.longitude) return { ...gym, distance: Infinity };
                 const distance = calculateDistance(
                     parseFloat(latitude),
                     parseFloat(longitude),
                     parseFloat(gym.latitude),
                     parseFloat(gym.longitude)
                 );
-                gym.distance = distance.toFixed(2);
-                return distance <= parseFloat(radius);
+                return { ...gym, distance: parseFloat(distance.toFixed(2)) };
             });
 
-            // Sort by distance
-            gyms.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+            // Try filtering by radius
+            let filteredGyms = gyms.filter(gym => gym.distance <= initialRadius);
+
+            if (filteredGyms.length === 0 && gyms.length > 0) {
+                // FALLBACK: Show top 5 closest gyms if none found in radius
+                filteredGyms = gyms
+                    .filter(gym => gym.distance !== Infinity)
+                    .sort((a, b) => a.distance - b.distance)
+                    .slice(0, 5);
+                searchExpanded = true;
+            }
+
+            gyms = filteredGyms;
+            // Sort by distance (if not already sorted by fallback)
+            if (!searchExpanded) {
+                gyms.sort((a, b) => a.distance - b.distance);
+            }
+
+            // Apply manual pagination if we didn't do it in SQL
+            const offset = (page - 1) * limit;
+            gyms = gyms.slice(offset, offset + limit);
         }
 
-        res.json({ gyms, total: gyms.length });
+        res.json({ gyms, total: gyms.length, searchExpanded });
     } catch (error) {
         console.error('Search gyms error:', error);
         res.status(500).json({ error: 'Failed to search gyms' });
@@ -180,25 +203,40 @@ export const getNearbyGyms = async (req, res) => {
          AND g.latitude IS NOT NULL AND g.longitude IS NOT NULL`
         );
 
-        const gyms = result.rows
-            .map(gym => {
-                const distance = calculateDistance(
-                    parseFloat(latitude),
-                    parseFloat(longitude),
-                    parseFloat(gym.latitude),
-                    parseFloat(gym.longitude)
-                );
-                return { ...gym, distance: distance.toFixed(2) };
-            })
-            .filter(gym => parseFloat(gym.distance) <= parseFloat(radius))
-            .sort((a, b) => {
-                // Featured gyms first, then by distance
+        const initialRadius = parseFloat(radius);
+        let searchExpanded = false;
+
+        const allGyms = result.rows.map(gym => {
+            const distance = calculateDistance(
+                parseFloat(latitude),
+                parseFloat(longitude),
+                parseFloat(gym.latitude),
+                parseFloat(gym.longitude)
+            );
+            return { ...gym, distance: parseFloat(distance.toFixed(2)) };
+        });
+
+        let filteredGyms = allGyms
+            .filter(gym => gym.distance <= initialRadius);
+
+        if (filteredGyms.length === 0 && allGyms.length > 0) {
+            // FALLBACK: Show top 5 closest gyms
+            filteredGyms = allGyms
+                .sort((a, b) => a.distance - b.distance)
+                .slice(0, 5);
+            searchExpanded = true;
+        }
+
+        const gyms = filteredGyms.sort((a, b) => {
+            // Featured gyms first, then by distance (if not expanded)
+            if (!searchExpanded) {
                 if (a.is_featured && !b.is_featured) return -1;
                 if (!a.is_featured && b.is_featured) return 1;
-                return parseFloat(a.distance) - parseFloat(b.distance);
-            });
+            }
+            return a.distance - b.distance;
+        });
 
-        res.json({ gyms });
+        res.json({ gyms, searchExpanded });
     } catch (error) {
         console.error('Get nearby gyms error:', error);
         res.status(500).json({ error: 'Failed to fetch nearby gyms' });

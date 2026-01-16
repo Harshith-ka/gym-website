@@ -1,52 +1,50 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Filter, SlidersHorizontal, Search, MapPin, X, LocateFixed } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Search, MapPin, Star, SlidersHorizontal, X, LocateFixed, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import GymCard from '../components/GymCard';
 import SearchBar from '../components/SearchBar';
 
 export default function ExploreGyms() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [gyms, setGyms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false); // Mobile toggle
+    const [searchExpanded, setSearchExpanded] = useState(false);
     const [filters, setFilters] = useState({
+        search: searchParams.get('search') || '',
+        city: searchParams.get('city') || '',
+        category: searchParams.get('category') || '',
         minPrice: '',
         maxPrice: '',
         minRating: '',
-        category: searchParams.get('category') || '',
-        serviceType: '',
+        latitude: searchParams.get('latitude') || '',
+        longitude: searchParams.get('longitude') || '',
+        radius: searchParams.get('radius') || 10,
         isOpen: '',
-        matchTime: '',
         hasSingleSession: '',
-        latitude: '',
-        longitude: '',
-        radius: 10
+        matchTime: '',
     });
 
     useEffect(() => {
-        const categoryParam = searchParams.get('category');
-        if (categoryParam) {
-            setFilters(prev => ({ ...prev, category: categoryParam }));
-        }
-        fetchGyms();
-    }, [searchParams]);
+        fetchGyms(filters);
+    }, []);
 
-    const fetchGyms = async (customFilters = null) => {
+    const fetchGyms = async (activeFilters) => {
         try {
             setLoading(true);
-            const params = new URLSearchParams(searchParams);
-            const activeFilters = customFilters || filters;
+            const params = new URLSearchParams();
 
-            // Add filters
+            if (activeFilters.search) params.append('search', activeFilters.search);
+            if (activeFilters.city) params.append('city', activeFilters.city);
+            if (activeFilters.category) params.append('category', activeFilters.category);
             if (activeFilters.minPrice) params.append('minPrice', activeFilters.minPrice);
             if (activeFilters.maxPrice) params.append('maxPrice', activeFilters.maxPrice);
             if (activeFilters.minRating) params.append('minRating', activeFilters.minRating);
-            if (activeFilters.category) params.append('category', activeFilters.category); // Now supports comma-separated
-            if (activeFilters.serviceType) params.append('serviceType', activeFilters.serviceType);
             if (activeFilters.isOpen) params.append('isOpen', activeFilters.isOpen);
-            if (activeFilters.matchTime) params.append('matchTime', activeFilters.matchTime);
             if (activeFilters.hasSingleSession) params.append('hasSingleSession', activeFilters.hasSingleSession);
+            if (activeFilters.matchTime) params.append('matchTime', activeFilters.matchTime);
 
             if (activeFilters.latitude && activeFilters.longitude) {
                 params.append('latitude', activeFilters.latitude);
@@ -55,7 +53,8 @@ export default function ExploreGyms() {
             }
 
             const response = await api.get(`/gyms/search?${params.toString()}`);
-            setGyms(response.data.gyms || []);
+            setGyms(response.data.gyms);
+            setSearchExpanded(response.data.searchExpanded || false);
         } catch (error) {
             console.error('Error fetching gyms:', error);
         } finally {
@@ -303,19 +302,30 @@ export default function ExploreGyms() {
                         <div style={styles.loading}>
                             <div className="spinner" />
                         </div>
-                    ) : gyms.length === 0 ? (
-                        <div style={styles.empty}>
-                            <div style={styles.emptyIcon}><Search size={48} /></div>
-                            <h3>No gyms found</h3>
-                            <p>Try adjusting your search or filters to find what you're looking for.</p>
-                            <button onClick={clearFilters} style={styles.resetBtn}>Reset Filters</button>
-                        </div>
                     ) : (
-                        <div className="grid grid-3">
-                            {gyms.map((gym) => (
-                                <GymCard key={gym.id} gym={gym} />
-                            ))}
-                        </div>
+                        <>
+                            {searchExpanded && gyms.length > 0 && (
+                                <div style={styles.expandedNotice}>
+                                    <AlertCircle size={20} />
+                                    <span>No gyms found within {filters.radius}km. Showing closest available gyms.</span>
+                                </div>
+                            )}
+
+                            {gyms.length === 0 ? (
+                                <div style={styles.empty}>
+                                    <div style={styles.emptyIcon}><Search size={48} /></div>
+                                    <h3>No gyms found</h3>
+                                    <p>Try adjusting your search or filters to find what you're looking for.</p>
+                                    <button onClick={() => { clearFilters(); setSearchExpanded(false); }} style={styles.resetBtn}>Reset Filters</button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-3">
+                                    {gyms.map((gym) => (
+                                        <GymCard key={gym.id} gym={gym} />
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                 </main>
             </div >
@@ -561,5 +571,17 @@ const styles = {
         borderRadius: '999px',
         fontWeight: 600,
         cursor: 'pointer',
+    },
+    expandedNotice: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        padding: '1rem 1.25rem',
+        background: 'rgba(59, 130, 246, 0.1)',
+        border: '1px solid #3b82f6',
+        borderRadius: '0.75rem',
+        color: '#60a5fa',
+        fontSize: '0.95rem',
+        marginBottom: '2rem',
     },
 };

@@ -1,3 +1,4 @@
+import React from 'react';
 import { CheckCircle, Search, Calendar, CreditCard, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

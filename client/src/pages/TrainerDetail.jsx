@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Award, Calendar, Clock, MapPin, Play } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';

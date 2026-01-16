@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, MapPin, Phone, Mail, Image } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, Image, LocateFixed, Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../services/api';
 
@@ -18,7 +18,10 @@ export default function GymRegistration() {
         email: '',
         categories: [],
         facilities: '',
+        latitude: '',
+        longitude: '',
     });
+    const [locating, setLocating] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const categories = [
@@ -37,6 +40,30 @@ export default function GymRegistration() {
                 ? formData.categories.filter(c => c !== categoryId)
                 : [...formData.categories, categoryId],
         });
+    };
+
+    const detectLocation = () => {
+        if (!("geolocation" in navigator)) {
+            alert("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                }));
+                setLocating(false);
+            },
+            (error) => {
+                console.error("Error detecting location:", error);
+                setLocating(false);
+                alert("Unable to retrieve your location. Please ensure location access is granted.");
+            }
+        );
     };
 
     const handleSubmit = async (e) => {
@@ -121,10 +148,21 @@ export default function GymRegistration() {
 
                 {/* Location */}
                 <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>
-                        <MapPin size={24} />
-                        Location
-                    </h2>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h2 style={{ ...styles.sectionTitle, marginBottom: 0 }}>
+                            <MapPin size={24} />
+                            Location
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={detectLocation}
+                            disabled={locating}
+                            style={styles.detectBtn}
+                        >
+                            {locating ? <Loader2 size={16} className="spinner" /> : <LocateFixed size={16} />}
+                            {locating ? ' Detecting...' : ' Detect My Coordinates'}
+                        </button>
+                    </div>
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Address *</label>
@@ -150,22 +188,26 @@ export default function GymRegistration() {
                         </div>
 
                         <div style={styles.inputGroup}>
-                            <label style={styles.label}>State</label>
+                            <label style={styles.label}>Latitude</label>
                             <input
-                                type="text"
-                                value={formData.state}
-                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                type="number"
+                                step="any"
+                                value={formData.latitude}
+                                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                                 className="input"
+                                placeholder="Auto-detected or enter manually"
                             />
                         </div>
 
                         <div style={styles.inputGroup}>
-                            <label style={styles.label}>Pincode</label>
+                            <label style={styles.label}>Longitude</label>
                             <input
-                                type="text"
-                                value={formData.pincode}
-                                onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                                type="number"
+                                step="any"
+                                value={formData.longitude}
+                                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                                 className="input"
+                                placeholder="Auto-detected or enter manually"
                             />
                         </div>
                     </div>
@@ -328,5 +370,23 @@ const styles = {
         fontSize: '0.875rem',
         color: 'var(--text-secondary)',
         marginTop: '1rem',
+    },
+    detectBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 1rem',
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid var(--primary)',
+        borderRadius: '999px',
+        color: 'var(--primary)',
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        ':hover': {
+            background: 'var(--primary)',
+            color: 'white',
+        }
     },
 };

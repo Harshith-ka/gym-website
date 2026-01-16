@@ -303,6 +303,34 @@ export const verifyPayment = async (req, res) => {
     }
 };
 
+// Get Booking Details
+export const getBookingDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `SELECT b.*, g.name as gym_name, g.address, g.images, gs.name as service_name,
+                    u.name as trainer_name
+       FROM bookings b
+       JOIN gyms g ON b.gym_id = g.id
+       LEFT JOIN gym_services gs ON b.service_id = gs.id
+       LEFT JOIN trainers t ON b.trainer_id = t.id
+       LEFT JOIN users u ON t.user_id = u.id
+       WHERE b.id = $1 AND b.user_id = $2`,
+            [id, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        res.json({ booking: result.rows[0] });
+    } catch (error) {
+        console.error('Get booking details error:', error);
+        res.status(500).json({ error: 'Failed to fetch booking' });
+    }
+};
+
 // Publicly Get Booking Details (Scan verification)
 export const getPublicBookingDetails = async (req, res) => {
     try {

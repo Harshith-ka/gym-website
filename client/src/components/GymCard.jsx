@@ -1,6 +1,6 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Heart } from 'lucide-react';
-import { useState } from 'react';
 
 export default function GymCard({ gym }) {
     const [isWishlisted, setIsWishlisted] = useState(false);
@@ -49,7 +49,7 @@ export default function GymCard({ gym }) {
 
                 <div style={styles.location}>
                     <MapPin size={14} color="#a1a1aa" />
-                    <span>{gym.city}</span>
+                    <span>{gym.city} {gym.distance && <span style={styles.distance}>• {gym.distance} km away</span>}</span>
                 </div>
 
                 <div style={styles.footer}>
@@ -177,5 +177,10 @@ const styles = {
         display: 'flex',
         alignItems: 'baseline',
         gap: '2px',
+    },
+    distance: {
+        color: 'var(--primary)',
+        fontWeight: 600,
+        marginLeft: '4px',
     },
 };

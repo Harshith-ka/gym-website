@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Instagram, Twitter, Facebook, Mail, MapPin, Phone } from 'lucide-react';
 

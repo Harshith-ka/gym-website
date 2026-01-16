@@ -1,7 +1,7 @@
 import pool from '../config/database.js';
 
 // Submit Review
-export const submitReview = async (req, res) => {
+export const createReview = async (req, res) => {
     try {
         const { gymId, trainerId, bookingId, trainerBookingId, rating, comment } = req.body;
 

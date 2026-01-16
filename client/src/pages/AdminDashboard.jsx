@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';

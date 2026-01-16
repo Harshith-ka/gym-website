@@ -388,7 +388,7 @@ export const manageTimeSlots = async (req, res) => {
 // Update Gym Profile
 export const updateGymProfile = async (req, res) => {
     try {
-        const { name, description, address, city, state, images, amenities, latitude, longitude } = req.body;
+        const { name, description, address, city, state, images, facilities, latitude, longitude } = req.body;
 
         const gymResult = await pool.query(
             'SELECT id FROM gyms WHERE owner_id = $1',
@@ -414,7 +414,7 @@ export const updateGymProfile = async (req, res) => {
              longitude = COALESCE($9, longitude)
              WHERE id = $10
              RETURNING *`,
-            [name, description, address, city, state, images, amenities, latitude, longitude, gymId]
+            [name, description, address, city, state, images, facilities, latitude, longitude, gymId]
         );
 
         res.json({ message: 'Profile updated', gym: result.rows[0] });

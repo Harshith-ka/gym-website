@@ -1,7 +1,7 @@
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Dumbbell, Users, Award, TrendingUp, Play, Star, Heart } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
-import { useState, useEffect } from 'react';
 import api from '../services/api';
 import GymCard from '../components/GymCard';
 
@@ -25,12 +25,12 @@ export default function Home() {
     };
 
     const categories = [
-        { name: 'Workout', icon: '💪', color: '#8B5CF6' },
-        { name: 'Yoga', icon: '🧘', color: '#06B6D4' },
-        { name: 'Dance', icon: '💃', color: '#EC4899' },
-        { name: 'Zumba', icon: '🎵', color: '#F59E0B' },
-        { name: 'CrossFit', icon: '🏋️', color: '#10B981' },
-        { name: 'Badminton', icon: '🏸', color: '#EF4444' },
+        { name: 'Workout', icon: '💪', color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop' },
+        { name: 'Yoga', icon: '🧘', color: '#06B6D4', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop' },
+        { name: 'Dance', icon: '💃', color: '#EC4899', image: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=600&auto=format&fit=crop' },
+        { name: 'Zumba', icon: '🎵', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?q=80&w=600&auto=format&fit=crop' },
+        { name: 'CrossFit', icon: '🏋️', color: '#10B981', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop' },
+        { name: 'Badminton', icon: '🏸', color: '#EF4444', image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop' },
     ];
 
     return (
@@ -108,16 +108,28 @@ export default function Home() {
 
             {/* Categories */}
             <section className="container" style={styles.section}>
-                <h2 style={styles.sectionTitle}>Browse by Category</h2>
+                <div style={styles.sectionHeader}>
+                    <h2 style={styles.sectionTitle}>Browse by Category</h2>
+                    <Link to="/categories" style={styles.viewAll}>
+                        View All Categories <ArrowRight size={20} />
+                    </Link>
+                </div>
                 <div style={styles.categories}>
                     {categories.map((cat) => (
                         <Link
                             key={cat.name}
                             to={`/category/${cat.name.toLowerCase()}`}
-                            style={{ ...styles.categoryCard, borderColor: cat.color }}
+                            style={styles.categoryCard}
                         >
-                            <span style={styles.categoryIcon}>{cat.icon}</span>
-                            <span style={styles.categoryName}>{cat.name}</span>
+                            <div style={styles.categoryImageContainer}>
+                                <img src={cat.image} alt={cat.name} style={styles.categoryImg} />
+                                <div style={{ ...styles.categoryOverlay, borderBottom: `4px solid ${cat.color}` }}>
+                                    <div style={styles.categoryGlass}>
+                                        <span style={styles.categoryIcon}>{cat.icon}</span>
+                                        <span style={styles.categoryName}>{cat.name}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </Link>
                     ))}
                 </div>
@@ -358,29 +370,57 @@ const styles = {
     },
     categories: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '1rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '1.5rem',
     },
     categoryCard: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1rem',
-        padding: '2rem 1rem',
-        background: '#1a1a1a', // Dark card
-        borderRadius: '1rem',
-        border: '1px solid #333',
+        position: 'relative',
+        borderRadius: '1.5rem',
+        overflow: 'hidden',
         textDecoration: 'none',
-        transition: 'all 0.3s',
+        height: '240px',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer',
     },
+    categoryImageContainer: {
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+    },
+    categoryImg: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        transition: 'transform 0.5s ease',
+    },
+    categoryOverlay: {
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        padding: '1.25rem',
+        transition: 'background 0.3s ease',
+    },
+    categoryGlass: {
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(8px)',
+        borderRadius: '1rem',
+        padding: '0.75rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
     categoryIcon: {
-        fontSize: '3rem',
+        fontSize: '1.5rem',
     },
     categoryName: {
         fontSize: '1.125rem',
-        fontWeight: 600,
+        fontWeight: 700,
         color: 'white',
+        letterSpacing: '0.5px',
     },
     loading: {
         display: 'flex',

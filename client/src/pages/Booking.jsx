@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';

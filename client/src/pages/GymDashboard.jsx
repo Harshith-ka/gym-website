@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart3, Calendar, Plus, Clock, Users, X, Check, Building2, Dumbbell, UserCheck, ScanLine, Upload, Sparkles, QrCode } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -182,6 +182,31 @@ export default function GymDashboard() {
             console.error('Error updating profile:', error);
             alert('Failed to update profile');
         }
+    };
+
+    const [locating, setLocating] = useState(false);
+    const detectLocation = () => {
+        if (!("geolocation" in navigator)) {
+            alert("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setGymProfile(prev => ({
+                    ...prev,
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                }));
+                setLocating(false);
+            },
+            (error) => {
+                console.error("Error detecting location:", error);
+                setLocating(false);
+                alert("Unable to retrieve your location. Please ensure location access is granted.");
+            }
+        );
     };
 
     const handleAddService = async () => {
@@ -573,7 +598,18 @@ export default function GymDashboard() {
 
                                 {activeTab === 'profile' && (
                                     <div style={styles.card}>
-                                        <h2 style={styles.cardTitle}>Gym Profile</h2>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                            <h2 style={{ ...styles.cardTitle, marginBottom: 0 }}>Gym Profile</h2>
+                                            <button
+                                                type="button"
+                                                onClick={detectLocation}
+                                                disabled={locating}
+                                                style={styles.detectBtn}
+                                            >
+                                                {locating ? <Loader2 size={16} className="spinner" /> : <LocateFixed size={16} />}
+                                                {locating ? ' Detecting...' : ' Update My Coordinates'}
+                                            </button>
+                                        </div>
                                         <form onSubmit={handleUpdateProfile}>
                                             <div style={styles.formGroup}>
                                                 <label style={styles.label}>Gym Name</label>
@@ -606,6 +642,30 @@ export default function GymDashboard() {
                                                         style={styles.input}
                                                         value={gymProfile?.address || ''}
                                                         onChange={e => setGymProfile({ ...gymProfile, address: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div style={styles.row}>
+                                                <div style={styles.formGroup}>
+                                                    <label style={styles.label}>Latitude</label>
+                                                    <input
+                                                        type="number"
+                                                        step="any"
+                                                        style={styles.input}
+                                                        value={gymProfile?.latitude || ''}
+                                                        onChange={e => setGymProfile({ ...gymProfile, latitude: e.target.value })}
+                                                        placeholder="Auto-detected or enter manually"
+                                                    />
+                                                </div>
+                                                <div style={styles.formGroup}>
+                                                    <label style={styles.label}>Longitude</label>
+                                                    <input
+                                                        type="number"
+                                                        step="any"
+                                                        style={styles.input}
+                                                        value={gymProfile?.longitude || ''}
+                                                        onChange={e => setGymProfile({ ...gymProfile, longitude: e.target.value })}
+                                                        placeholder="Auto-detected or enter manually"
                                                     />
                                                 </div>
                                             </div>
@@ -1315,6 +1375,20 @@ const styles = {
         gap: '0.5rem',
         color: '#a1a1aa',
         fontSize: '0.875rem',
+    },
+    detectBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.6rem 1.25rem',
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid #8B5CF6',
+        borderRadius: '999px',
+        color: '#8B5CF6',
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
     },
     primaryBtn: {
         background: 'white',

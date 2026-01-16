@@ -1,7 +1,7 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserButton, SignInButton, useUser } from '@clerk/clerk-react';
 import { Sparkles, Menu, X, User, Heart, Search } from 'lucide-react';
-import { useState } from 'react';
 
 export default function Navbar() {
     const { isSignedIn } = useUser();
