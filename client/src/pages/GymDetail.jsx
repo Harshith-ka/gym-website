@@ -109,7 +109,7 @@ export default function GymDetail() {
             </nav>
 
             {/* Header */}
-            <header style={styles.header}>
+            <header className="gym-detail-header" style={styles.header}>
                 <div style={styles.headerLeft}>
                     <h1 style={styles.title}>{gym.name}</h1>
                     <div style={styles.metaRow}>
@@ -133,7 +133,7 @@ export default function GymDetail() {
             </header>
 
             {/* Media Gallery */}
-            <div style={styles.imageGrid}>
+            <div className="gym-detail-image-grid" style={styles.imageGrid}>
                 <div style={styles.heroImageContainer}>
                     {gym.videos && gym.videos.length > 0 ? (
                         <div style={{ position: 'relative', height: '100%' }}>
@@ -167,7 +167,7 @@ export default function GymDetail() {
             </div>
 
             {/* Main Content Layout */}
-            <div style={styles.layout}>
+            <div className="gym-detail-layout" style={styles.layout}>
                 {/* Left Column */}
                 <div style={styles.leftColumn}>
                     {/* About */}
@@ -207,7 +207,7 @@ export default function GymDetail() {
                     {/* Location & Map */}
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Location</h2>
-                        <div style={{ height: '400px', width: '100%', borderRadius: '1rem', overflow: 'hidden', border: '1px solid #333', background: '#1a1a1a' }}>
+                        <div style={{ height: '400px', width: '100%' }}>
                             {gym.latitude && gym.longitude ? (
                                 <GymMap
                                     latitude={gym.latitude}
@@ -298,7 +298,7 @@ export default function GymDetail() {
                                             {trainer.rating > 0 && (
                                                 <div style={styles.trainerRatingBadge}>
                                                     <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                                                    <span>{trainer.rating.toFixed(1)}</span>
+                                                    <span>{Number(trainer.rating).toFixed(1)}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -322,9 +322,9 @@ export default function GymDetail() {
                     <section style={styles.section}>
                         <h2 style={styles.sectionTitle}>Reviews</h2>
                         {/* Summary */}
-                        <div style={styles.reviewSummary}>
+                        <div className="gym-detail-review-summary" style={styles.reviewSummary}>
                             <div style={{ textAlign: 'center', paddingRight: '2rem', borderRight: '1px solid var(--border)' }}>
-                                <div style={styles.bigRating}>{gym.rating?.toFixed(1) || '0.0'}</div>
+                                <div style={styles.bigRating}>{gym.rating ? Number(gym.rating).toFixed(1) : '0.0'}</div>
                                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <Star key={star} size={20} fill={star <= (gym.rating || 0) ? '#F59E0B' : '#e5e7eb'} color="none" />
@@ -405,7 +405,7 @@ export default function GymDetail() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Star size={16} fill="var(--primary)" color="var(--primary)" />
-                                <span style={{ fontWeight: 700 }}>{gym.rating?.toFixed(1) || '0.0'}</span>
+                                <span style={{ fontWeight: 700 }}>{gym.rating ? Number(gym.rating).toFixed(1) : '0.0'}</span>
                                 <span style={{ color: 'var(--text-secondary)' }}>({gym.total_reviews})</span>
                             </div>
                         </div>

@@ -1,20 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Instagram, Twitter, Facebook, Mail, MapPin, Phone } from 'lucide-react';
+import { Sparkles, Instagram, Twitter, Facebook, Mail, MapPin, Phone, ChevronRight } from 'lucide-react';
 
 export default function Footer() {
     return (
-        <footer style={styles.footer}>
-            <div className="container">
+        <footer style={styles.footer} className="hero-gradient">
+            <div className="container" style={styles.container}>
                 <div style={styles.grid}>
-                    {/* Brand */}
-                    <div>
+                    {/* Brand Card */}
+                    <div className="section-glass" style={styles.brandCard}>
                         <Link to="/" style={styles.logo}>
-                            <Sparkles size={24} color="white" />
+                            <Sparkles size={24} color="var(--primary)" />
                             <span style={styles.logoText}>Purpul Hue</span>
                         </Link>
                         <p style={styles.description}>
-                            Your dedicated space to grow, transform, and thrive. Join the movement today.
+                            Your dedicated space to grow, transform, and thrive. Join a community of peak performers.
                         </p>
                         <div style={styles.socials}>
                             <a href="#" style={styles.socialLink}><Instagram size={18} /></a>
@@ -23,50 +23,68 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Quick Links */}
-                    <div>
-                        <h3 style={styles.title}>Explore</h3>
-                        <div style={styles.links}>
-                            <Link to="/explore" style={styles.link}>Services</Link>
-                            <Link to="/trainers" style={styles.link}>Trainers</Link>
-                            <Link to="/categories" style={styles.link}>Programs</Link>
-                            <Link to="/how-it-works" style={styles.link}>How It Works</Link>
+                    {/* Navigation Columns */}
+                    <div style={styles.navSection}>
+                        <div style={styles.navCol}>
+                            <h3 style={styles.title}>Explore</h3>
+                            <div style={styles.links}>
+                                <Link to="/explore" style={styles.link}>All Gyms</Link>
+                                <Link to="/trainers" style={styles.link}>Coaches</Link>
+                                <Link to="/programs" style={styles.link}>Programs</Link>
+                                <Link to="/blog" style={styles.link}>Fitness Blog</Link>
+                            </div>
+                        </div>
+
+                        <div style={styles.navCol}>
+                            <h3 style={styles.title}>Company</h3>
+                            <div style={styles.links}>
+                                <Link to="/about" style={styles.link}>Our Story</Link>
+                                <Link to="/contact" style={styles.link}>Get in Touch</Link>
+                                <Link to="/terms" style={styles.link}>Safe Training</Link>
+                                <Link to="/privacy" style={styles.link}>Data Privacy</Link>
+                            </div>
+                        </div>
+
+                        <div style={styles.navCol}>
+                            <h3 style={styles.title}>Support</h3>
+                            <div style={styles.links}>
+                                <a href="mailto:hello@purpulhue.com" style={styles.link}>Help Center</a>
+                                <Link to="/how-it-works" style={styles.link}>Member FAQ</Link>
+                                <a href="#" style={styles.link}>Trainer Portal</a>
+                                <a href="#" style={styles.link}>Gym Partnership</a>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Support */}
-                    <div>
-                        <h3 style={styles.title}>Company</h3>
-                        <div style={styles.links}>
-                            <Link to="/about" style={styles.link}>About Us</Link>
-                            <Link to="/contact" style={styles.link}>Contact</Link>
-                            <Link to="/terms" style={styles.link}>Terms</Link>
-                            <Link to="/privacy" style={styles.link}>Privacy</Link>
+                    {/* Contact & Newsletter */}
+                    <div style={styles.contactSection}>
+                        <h3 style={styles.title}>Stay in the Loop</h3>
+                        <p style={styles.subText}>Get the latest gym drops and training tips.</p>
+                        <div style={styles.newsletter}>
+                            <input type="email" placeholder="Your email" style={styles.newsInput} />
+                            <button style={styles.newsBtn}><ChevronRight size={18} /></button>
                         </div>
-                    </div>
-
-                    {/* Contact */}
-                    <div>
-                        <h3 style={styles.title}>Visit Us</h3>
-                        <div style={styles.contactInfo}>
-                            <div style={styles.contactItem}>
-                                <MapPin size={16} style={{ flexShrink: 0 }} />
+                        <div style={styles.visitUs}>
+                            <div style={styles.visitItem}>
+                                <MapPin size={16} />
                                 <span>123 Fitness Street, Mumbai</span>
                             </div>
-                            <div style={styles.contactItem}>
-                                <Phone size={16} style={{ flexShrink: 0 }} />
-                                <span>+91 1234567890</span>
-                            </div>
-                            <div style={styles.contactItem}>
-                                <Mail size={16} style={{ flexShrink: 0 }} />
-                                <span>hello@purpulhue.com</span>
+                            <div style={styles.visitItem}>
+                                <Phone size={16} />
+                                <span>+91 123 456 7890</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div style={styles.bottom}>
-                    <p>&copy; {new Date().getFullYear()} Purpul Hue. All rights reserved.</p>
+                    <div style={styles.bottomContent}>
+                        <p>&copy; {new Date().getFullYear()} Purpul Hue. Built for Athletes.</p>
+                        <div style={styles.legalLinks}>
+                            <Link to="/terms" style={styles.legalLink}>Terms</Link>
+                            <Link to="/privacy" style={styles.legalLink}>Privacy</Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>
@@ -75,65 +93,82 @@ export default function Footer() {
 
 const styles = {
     footer: {
-        background: '#000',
-        paddingTop: '5rem',
+        background: '#0a0a0a',
+        paddingTop: '6rem',
         marginTop: 'auto',
-        borderTop: '1px solid #222',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
         color: 'white',
+        overflow: 'hidden',
     },
-    grid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '4rem',
-        marginBottom: '4rem',
+    container: {
         maxWidth: '1280px',
         margin: '0 auto',
         padding: '0 2rem',
+    },
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: '1.2fr 2fr 1fr',
+        gap: '4rem',
+        marginBottom: '4rem',
+    },
+    brandCard: {
+        padding: '2.5rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
     },
     logo: {
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',
-        marginBottom: '1.5rem',
         textDecoration: 'none',
     },
     logoText: {
         color: 'white',
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        letterSpacing: '-0.5px',
+        fontSize: '1.5rem',
+        fontWeight: 800,
+        letterSpacing: '-1px',
     },
     description: {
         color: '#a1a1aa',
         lineHeight: 1.6,
-        marginBottom: '2rem',
-        fontSize: '0.9rem',
-        maxWidth: '250px',
+        fontSize: '0.95rem',
     },
     socials: {
         display: 'flex',
         gap: '1rem',
+        marginTop: '0.5rem',
     },
     socialLink: {
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        background: '#1a1a1a',
+        width: '44px',
+        height: '44px',
+        borderRadius: '12px',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.05)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'white',
-        transition: 'all 0.2s',
-        border: '1px solid #333',
+        color: '#a1a1aa',
+        transition: 'all 0.3s ease',
         textDecoration: 'none',
     },
+    navSection: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '2rem',
+    },
+    navCol: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+    },
     title: {
-        fontSize: '0.9rem',
-        fontWeight: 600,
-        marginBottom: '1.5rem',
+        fontSize: '0.8rem',
+        fontWeight: 700,
         textTransform: 'uppercase',
-        letterSpacing: '1px',
-        color: 'white',
+        letterSpacing: '2px',
+        color: 'var(--primary)',
+        marginBottom: '0.5rem',
     },
     links: {
         display: 'flex',
@@ -144,29 +179,76 @@ const styles = {
         color: '#a1a1aa',
         textDecoration: 'none',
         fontSize: '0.95rem',
-        transition: 'color 0.2s',
-        fontWeight: 400,
+        transition: 'all 0.2s ease',
     },
-    contactInfo: {
+    contactSection: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.25rem',
+        gap: '1.5rem',
     },
-    contactItem: {
+    subText: {
+        color: '#71717a',
+        fontSize: '0.9rem',
+    },
+    newsletter: {
         display: 'flex',
-        alignItems: 'flex-start',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.05)',
+        borderRadius: '0.75rem',
+        padding: '0.25rem',
+    },
+    newsInput: {
+        flex: 1,
+        background: 'transparent',
+        border: 'none',
+        padding: '0.75rem 1rem',
+        color: 'white',
+        fontSize: '0.9rem',
+        outline: 'none',
+    },
+    newsBtn: {
+        background: 'var(--primary)',
+        color: 'black',
+        border: 'none',
+        borderRadius: '0.6rem',
+        width: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+    },
+    visitUs: {
+        marginTop: '1rem',
+        display: 'flex',
+        flexDirection: 'column',
         gap: '1rem',
+    },
+    visitItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
         color: '#a1a1aa',
-        fontSize: '0.95rem',
-        lineHeight: 1.4,
+        fontSize: '0.9rem',
     },
     bottom: {
-        padding: '2rem 0',
-        borderTop: '1px solid #222',
-        textAlign: 'center',
+        padding: '2.5rem 0',
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+    },
+    bottomContent: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         color: '#52525b',
-        fontSize: '0.875rem',
-        maxWidth: '1280px',
-        margin: '0 auto',
+        fontSize: '0.85rem',
+    },
+    legalLinks: {
+        display: 'flex',
+        gap: '2rem',
+    },
+    legalLink: {
+        color: '#52525b',
+        textDecoration: 'none',
+        transition: 'color 0.2s',
     },
 };
+

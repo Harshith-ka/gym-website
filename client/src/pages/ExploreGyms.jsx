@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { Search, MapPin, Star, SlidersHorizontal, X, LocateFixed, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import GymCard from '../components/GymCard';
@@ -7,6 +7,7 @@ import SearchBar from '../components/SearchBar';
 
 export default function ExploreGyms() {
     const [searchParams] = useSearchParams();
+    const { category: pathCategory } = useParams();
     const navigate = useNavigate();
     const [gyms, setGyms] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,7 +16,7 @@ export default function ExploreGyms() {
     const [filters, setFilters] = useState({
         search: searchParams.get('search') || '',
         city: searchParams.get('city') || '',
-        category: searchParams.get('category') || '',
+        category: pathCategory || searchParams.get('category') || '',
         minPrice: '',
         maxPrice: '',
         minRating: '',
@@ -28,10 +29,13 @@ export default function ExploreGyms() {
     });
 
     useEffect(() => {
-        fetchGyms(filters);
-    }, []);
+        const initialCategory = pathCategory || searchParams.get('category') || '';
+        const initialFilters = { ...filters, category: initialCategory };
+        setFilters(initialFilters);
+        fetchGyms(initialFilters);
+    }, [pathCategory, searchParams]);
 
-    const fetchGyms = async (activeFilters) => {
+    const fetchGyms = async (activeFilters = filters) => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
@@ -124,7 +128,7 @@ export default function ExploreGyms() {
     return (
         <div className="container" style={styles.container}>
             {/* Header */}
-            <div style={styles.header}>
+            <header className="explore-header" style={styles.header}>
                 <div>
                     <h1 style={styles.title}>Explore Gyms</h1>
                     <p style={styles.subtitle}>
@@ -134,121 +138,129 @@ export default function ExploreGyms() {
                 {/* Mobile Filter Toggle */}
                 <button
                     onClick={() => setShowFilters(true)}
+                    className="mobile-filter-btn"
                     style={styles.mobileFilterBtn}
                 >
-                    <Filter size={18} /> Filters
+                    <SlidersHorizontal size={18} /> Filters
                 </button>
-            </div>
+            </header>
 
             {/* Search Bar */}
             <div style={styles.searchSection}>
                 <SearchBar />
             </div>
 
-            <div style={styles.content}>
+            <div className="explore-content" style={styles.content}>
                 {/* Filters Sidebar */}
-                <aside style={{
-                    ...styles.sidebar,
-                    ...(showFilters ? styles.mobileSidebarOpen : styles.mobileSidebarClosed)
-                }}>
+                <aside className={`explore-sidebar filter-sidebar-glass ${showFilters ? 'open' : ''}`} style={styles.sidebar}>
                     <div style={styles.sidebarHeader}>
                         <h3 style={styles.filterTitle}>
                             <SlidersHorizontal size={18} />
                             Filters
                         </h3>
-                        <button
-                            onClick={() => setShowFilters(false)}
-                            style={styles.closeBtn}
-                        >
-                            <X size={20} />
-                        </button>
+                        {showFilters && (
+                            <button
+                                onClick={() => setShowFilters(false)}
+                                style={styles.closeBtn}
+                                className="close-btn"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
                     </div>
 
-                    <div style={styles.filterGroups}>
-                        {/* Near Me Button */}
-                        <button
-                            onClick={handleNearMe}
-                            style={{
-                                ...styles.nearMeBtn,
-                                background: filters.latitude ? 'var(--primary)' : '#27272a',
-                                color: filters.latitude ? 'black' : 'white',
-                                border: filters.latitude ? 'none' : '1px solid #333'
-                            }}
-                        >
-                            <LocateFixed size={18} />
-                            {filters.latitude ? 'Using Current Location' : 'Search Near Me'}
-                        </button>
+                    <div className="filter-groups-container" style={{ ...styles.filterGroups, paddingBottom: showFilters ? '80px' : '0' }}>
+                        {/* Location Group */}
+                        <div className="filter-group-card">
+                            <label style={styles.label}>Location</label>
+                            <button
+                                onClick={handleNearMe}
+                                className={`near-me-pulse ${filters.latitude ? 'active' : ''}`}
+                                style={{
+                                    ...styles.nearMeBtn,
+                                    background: filters.latitude ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                    color: filters.latitude ? 'black' : 'white',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    marginBottom: 0
+                                }}
+                            >
+                                <LocateFixed size={18} />
+                                {filters.latitude ? 'Current Location' : 'Search Near Me'}
+                            </button>
+                        </div>
 
-                        <div style={styles.divider} />
-
-                        {/* Availability */}
-                        <div style={styles.filterGroup}>
+                        {/* Availability Group */}
+                        <div className="filter-group-card">
                             <label style={styles.label}>Availability</label>
                             <div style={styles.checkboxGroup}>
-                                <label style={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        checked={filters.isOpen === 'true'}
-                                        onChange={(e) => handleFilterChange('isOpen', e.target.checked ? 'true' : '')}
-                                        style={styles.checkbox}
-                                    />
-                                    Open Now
+                                <label className="custom-toggle">
+                                    <span style={styles.checkboxLabel}>Open Now</span>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.isOpen === 'true'}
+                                            onChange={(e) => handleFilterChange('isOpen', e.target.checked ? 'true' : '')}
+                                            style={{ opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', zIndex: 1 }}
+                                        />
+                                        <div className="toggle-switch"></div>
+                                    </div>
                                 </label>
-                                <label style={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        checked={filters.hasSingleSession === 'true'}
-                                        onChange={(e) => handleFilterChange('hasSingleSession', e.target.checked ? 'true' : '')}
-                                        style={styles.checkbox}
-                                    />
-                                    Single Session Available
+                                <label className="custom-toggle">
+                                    <span style={styles.checkboxLabel}>Single Session</span>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.hasSingleSession === 'true'}
+                                            onChange={(e) => handleFilterChange('hasSingleSession', e.target.checked ? 'true' : '')}
+                                            style={{ opacity: 0, position: 'absolute', inset: 0, cursor: 'pointer', zIndex: 1 }}
+                                        />
+                                        <div className="toggle-switch"></div>
+                                    </div>
                                 </label>
                             </div>
 
                             {/* Time Match */}
-                            <div style={{ marginTop: '0.75rem' }}>
-                                <label style={{ ...styles.label, fontSize: '0.8rem', marginBottom: '0.25rem' }}>Check specific time:</label>
+                            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                <label style={{ ...styles.label, fontSize: '0.8rem', marginBottom: '0.5rem' }}>Check specific time:</label>
                                 <input
                                     type="time"
                                     value={filters.matchTime || ''}
                                     onChange={(e) => handleFilterChange('matchTime', e.target.value)}
-                                    style={styles.input}
+                                    style={{ ...styles.input, background: 'rgba(255,255,255,0.05)' }}
                                 />
                             </div>
                         </div>
 
-                        <div style={styles.divider} />
-
-                        <div style={styles.filterGroup}>
+                        {/* Categories Group */}
+                        <div className="filter-group-card">
                             <label style={styles.label}>Categories</label>
-                            <div style={styles.checkboxGroup}>
-                                {categories.map(cat => (
-                                    <label key={cat.id} style={styles.checkboxLabel}>
-                                        <input
-                                            type="checkbox"
-                                            checked={filters.category.split(',').includes(cat.id)}
-                                            onChange={(e) => {
+                            <div className="chip-group">
+                                {categories.map(cat => {
+                                    const isActive = filters.category.split(',').includes(cat.id);
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            className={`chip ${isActive ? 'active' : ''}`}
+                                            onClick={() => {
                                                 const current = filters.category ? filters.category.split(',') : [];
                                                 let newCats;
-                                                if (e.target.checked) {
+                                                if (!isActive) {
                                                     newCats = [...current, cat.id];
                                                 } else {
                                                     newCats = current.filter(c => c !== cat.id);
                                                 }
                                                 handleFilterChange('category', newCats.join(','));
                                             }}
-                                            style={styles.checkbox}
-                                        />
-                                        <span>{cat.label}</span>
-                                    </label>
-                                ))}
+                                        >
+                                            {cat.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        <div style={styles.divider} />
-
-                        {/* Price Range */}
-                        <div style={styles.filterGroup}>
+                        {/* Pricing & Rating Group */}
+                        <div className="filter-group-card">
                             <label style={styles.label}>Price Range (₹)</label>
                             <div style={styles.priceInputs}>
                                 <input
@@ -256,7 +268,7 @@ export default function ExploreGyms() {
                                     placeholder="Min"
                                     value={filters.minPrice}
                                     onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                                    style={styles.input}
+                                    style={{ ...styles.input, background: 'rgba(255,255,255,0.05)' }}
                                 />
                                 <span style={{ color: '#666' }}>-</span>
                                 <input
@@ -264,31 +276,30 @@ export default function ExploreGyms() {
                                     placeholder="Max"
                                     value={filters.maxPrice}
                                     onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                    style={styles.input}
+                                    style={{ ...styles.input, background: 'rgba(255,255,255,0.05)' }}
                                 />
                             </div>
-                        </div>
 
-                        {/* Rating */}
-                        <div style={styles.filterGroup}>
-                            <label style={styles.label}>Minimum Rating</label>
-                            <div style={styles.selectWrapper}>
-                                <select
-                                    value={filters.minRating}
-                                    onChange={(e) => handleFilterChange('minRating', e.target.value)}
-                                    style={styles.select}
-                                >
-                                    <option value="">Any Rating</option>
-                                    <option value="4">4.0+</option>
-                                    <option value="3">3.0+</option>
-                                    <option value="2">2.0+</option>
-                                </select>
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <label style={styles.label}>Minimum Rating</label>
+                                <div style={styles.selectWrapper}>
+                                    <select
+                                        value={filters.minRating}
+                                        onChange={(e) => handleFilterChange('minRating', e.target.value)}
+                                        style={{ ...styles.select, background: 'rgba(255,255,255,0.05)' }}
+                                    >
+                                        <option value="">Any Rating</option>
+                                        <option value="4">4.0+ Stars</option>
+                                        <option value="3">3.0+ Stars</option>
+                                        <option value="2">2.0+ Stars</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
                     </div>
 
-                    <div style={styles.filterActions}>
+                    <div className={showFilters ? "filter-footer-sticky" : "filter-actions"} style={styles.filterActions}>
                         <button onClick={applyFilters} style={styles.applyBtn}>Apply Filters</button>
                         <button onClick={clearFilters} style={styles.clearBtn}>Clear All</button>
                     </div>

@@ -38,7 +38,10 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
     console.error('❌ Unexpected database error:', err);
-    process.exit(-1);
+    // Don't exit in development, let the next request try to reconnect
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(-1);
+    }
 });
 
 export default pool;

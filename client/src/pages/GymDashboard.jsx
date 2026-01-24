@@ -3,6 +3,8 @@ import { BarChart3, Calendar, Plus, Clock, Users, X, Check, Building2, Dumbbell,
 import { useAuth } from '@clerk/clerk-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../services/api';
+import ImageUpload from '../components/ImageUpload';
+import MultiImageUpload from '../components/MultiImageUpload';
 
 export default function GymDashboard() {
     const { getToken } = useAuth();
@@ -83,7 +85,7 @@ export default function GymDashboard() {
         hourly_rate: '',
     });
     const [trainerFiles, setTrainerFiles] = useState({
-        profileImage: null,
+        profileImage: '',
         introVideo: null
     });
 
@@ -316,11 +318,11 @@ export default function GymDashboard() {
 
             const formData = new FormData();
             formData.append('action', 'create');
-            formData.append('trainerData', JSON.stringify(newTrainer));
+            formData.append('trainerData', JSON.stringify({
+                ...newTrainer,
+                profile_image: trainerFiles.profileImage
+            }));
 
-            if (trainerFiles.profileImage) {
-                formData.append('profileImage', trainerFiles.profileImage);
-            }
             if (trainerFiles.introVideo) {
                 formData.append('introVideo', trainerFiles.introVideo);
             }
@@ -341,7 +343,7 @@ export default function GymDashboard() {
                 certifications: '',
                 hourly_rate: '',
             });
-            setTrainerFiles({ profileImage: null, introVideo: null });
+            setTrainerFiles({ profileImage: '', introVideo: null });
             fetchDashboardData();
         } catch (error) {
             console.error('Error adding trainer:', error);
@@ -483,27 +485,29 @@ export default function GymDashboard() {
     return (
         <div style={styles.container}>
             <div className="container">
-                <div style={styles.header}>
+                <header className="dashboard-header gym-dashboard-header" style={styles.header}>
                     <div>
                         <h1 style={styles.title}>Partner Dashboard</h1>
                         <p style={styles.subtitle}>Manage your facility, bookings, and slots.</p>
                     </div>
-                    {activeTab === 'slots' && (
-                        <button style={styles.primaryBtn} onClick={() => setShowSlotModal(true)}>
-                            <Plus size={18} /> Add Slot
-                        </button>
-                    )}
-                    {activeTab === 'trainers' && (
-                        <button style={styles.primaryBtn} onClick={() => setShowTrainerModal(true)}>
-                            <Plus size={18} /> Add Trainer
-                        </button>
-                    )}
-                </div>
+                    <div className="dashboard-header-actions">
+                        {activeTab === 'slots' && (
+                            <button style={styles.primaryBtn} onClick={() => setShowSlotModal(true)}>
+                                <Plus size={18} /> Add Slot
+                            </button>
+                        )}
+                        {activeTab === 'trainers' && (
+                            <button style={styles.primaryBtn} onClick={() => setShowTrainerModal(true)}>
+                                <Plus size={18} /> Add Trainer
+                            </button>
+                        )}
+                    </div>
+                </header>
 
-                <div style={styles.sidebarLayout}>
+                <div className="dashboard-layout" style={styles.sidebarLayout}>
                     {/* Sidebar / Tabs */}
-                    <div style={styles.sidebar}>
-                        <div style={styles.tabList}>
+                    <aside className="dashboard-sidebar" style={styles.sidebar}>
+                        <div className="dashboard-tab-list" style={styles.tabList}>
                             <TabButton id="overview" label="Overview" icon={BarChart3} />
                             <TabButton id="bookings" label="Bookings" icon={Calendar} />
                             <TabButton id="slots" label="Time Slots" icon={Clock} />
@@ -513,10 +517,10 @@ export default function GymDashboard() {
                             <TabButton id="promote" label="Promote" icon={Sparkles} />
                             <TabButton id="verify" label="Verify Booking" icon={ScanLine} />
                         </div>
-                    </div>
+                    </aside>
 
                     {/* Main Content */}
-                    <div style={styles.mainContent}>
+                    <main className="dashboard-main" style={styles.mainContent}>
                         {loading ? (
                             <div style={styles.loading}>
                                 <div className="spinner" />
@@ -669,6 +673,14 @@ export default function GymDashboard() {
                                                     />
                                                 </div>
                                             </div>
+                                            <div style={styles.formGroup}>
+                                                <MultiImageUpload
+                                                    label="Gym Photos"
+                                                    currentImages={gymProfile?.images || []}
+                                                    onImagesChange={(images) => setGymProfile({ ...gymProfile, images })}
+                                                    maxImages={8}
+                                                />
+                                            </div>
                                             <button type="submit" style={styles.primaryBtn}>Save Changes</button>
                                         </form>
                                     </div>
@@ -816,6 +828,8 @@ export default function GymDashboard() {
 
                                         <div style={styles.formGroup}>
                                             <input
+                                                id="manual-verify"
+                                                name="manual-verify"
                                                 style={{ ...styles.input, textAlign: 'center', fontSize: '1.2rem', letterSpacing: '4px', textTransform: 'uppercase' }}
                                                 placeholder="ENTER 6-DIGIT CODE OR UUID"
                                                 value={qrCode}
@@ -886,283 +900,299 @@ export default function GymDashboard() {
                                 )}
                             </>
                         )}
-                    </div>
+                    </main>
                 </div>
             </div>
 
             {/* Modals */}
-            {showSlotModal && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modal}>
-                        <h2 style={styles.modalTitle}>Add New Slot</h2>
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Day</label>
-                            <select
-                                value={newSlot.dayOfWeek}
-                                onChange={(e) => setNewSlot({ ...newSlot, dayOfWeek: parseInt(e.target.value) })}
-                                style={styles.input}
-                            >
-                                {dayNames.map((day, idx) => (
-                                    <option key={idx} value={idx}>{day}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div style={styles.row}>
+            {
+                showSlotModal && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modal}>
+                            <h2 style={styles.modalTitle}>Add New Slot</h2>
                             <div style={styles.formGroup}>
-                                <label style={styles.label}>Start</label>
-                                <input
-                                    type="time"
-                                    value={newSlot.startTime}
-                                    onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                                    style={styles.input}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>End</label>
-                                <input
-                                    type="time"
-                                    value={newSlot.endTime}
-                                    onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                                    style={styles.input}
-                                />
-                            </div>
-                        </div>
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Max Capacity</label>
-                            <input
-                                type="number"
-                                value={newSlot.maxCapacity}
-                                onChange={(e) => setNewSlot({ ...newSlot, maxCapacity: parseInt(e.target.value) })}
-                                style={styles.input}
-                            />
-                        </div>
-                        <div style={styles.modalActions}>
-                            <button style={styles.secondaryBtn} onClick={() => setShowSlotModal(false)}>Cancel</button>
-                            <button style={styles.primaryBtn} onClick={handleAddSlot}>Save Slot</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showServiceModal && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modal}>
-                        <h2 style={styles.modalTitle}>Add New Service</h2>
-                        <div style={{ ...styles.modalBody, maxHeight: 'none' }}>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Service Name</label>
-                                <input
-                                    style={styles.input}
-                                    placeholder="e.g., Per Session, Monthly Pass"
-                                    value={newService.name}
-                                    onChange={e => setNewService({ ...newService, name: e.target.value })}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Price (₹)</label>
-                                <input
-                                    type="number"
-                                    style={styles.input}
-                                    placeholder="500"
-                                    value={newService.price}
-                                    onChange={e => setNewService({ ...newService, price: e.target.value })}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Service Type</label>
+                                <label style={styles.label}>Day</label>
                                 <select
+                                    value={newSlot.dayOfWeek}
+                                    onChange={(e) => setNewSlot({ ...newSlot, dayOfWeek: parseInt(e.target.value) })}
                                     style={styles.input}
-                                    value={newService.service_type}
-                                    onChange={e => setNewService({ ...newService, service_type: e.target.value })}
                                 >
-                                    <option value="session">Session-Based</option>
-                                    <option value="pass">Passes</option>
-                                    <option value="membership">Memberships</option>
+                                    {dayNames.map((day, idx) => (
+                                        <option key={idx} value={idx}>{day}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div style={styles.row}>
                                 <div style={styles.formGroup}>
-                                    <label style={styles.label}>Duration Value</label>
+                                    <label style={styles.label}>Start</label>
                                     <input
-                                        type="number"
+                                        type="time"
+                                        id="slotStartTime"
+                                        name="slotStartTime"
+                                        value={newSlot.startTime}
+                                        onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
                                         style={styles.input}
-                                        value={newService.duration_value}
-                                        onChange={e => setNewService({ ...newService, duration_value: e.target.value })}
                                     />
                                 </div>
                                 <div style={styles.formGroup}>
-                                    <label style={styles.label}>Unit</label>
-                                    <select
+                                    <label style={styles.label}>End</label>
+                                    <input
+                                        type="time"
+                                        id="slotEndTime"
+                                        name="slotEndTime"
+                                        value={newSlot.endTime}
+                                        onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
                                         style={styles.input}
-                                        value={newService.duration_unit}
-                                        onChange={e => setNewService({ ...newService, duration_unit: e.target.value })}
-                                    >
-                                        <option value="hour">Hours</option>
-                                        <option value="day">Days</option>
-                                        <option value="month">Months</option>
-                                        <option value="year">Years</option>
-                                    </select>
+                                    />
                                 </div>
                             </div>
                             <div style={styles.formGroup}>
-                                <label style={styles.label}>Description</label>
-                                <textarea
-                                    style={{ ...styles.input, minHeight: '80px' }}
-                                    placeholder="Briefly describe what's included..."
-                                    value={newService.description}
-                                    onChange={e => setNewService({ ...newService, description: e.target.value })}
+                                <label style={styles.label}>Max Capacity</label>
+                                <input
+                                    type="number"
+                                    value={newSlot.maxCapacity}
+                                    onChange={(e) => setNewSlot({ ...newSlot, maxCapacity: parseInt(e.target.value) })}
+                                    style={styles.input}
                                 />
                             </div>
-                        </div>
-                        <div style={styles.modalActions}>
-                            <button style={styles.secondaryBtn} onClick={() => setShowServiceModal(false)}>Cancel</button>
-                            <button style={styles.primaryBtn} onClick={handleAddService}>Create Service</button>
+                            <div style={styles.modalActions}>
+                                <button style={styles.secondaryBtn} onClick={() => setShowSlotModal(false)}>Cancel</button>
+                                <button style={styles.primaryBtn} onClick={handleAddSlot}>Save Slot</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-            {showAvailabilityModal && selectedTrainer && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modal}>
-                        <h2 style={styles.modalTitle}>Manage Availability</h2>
-                        <p style={{ color: '#a1a1aa', marginBottom: '1.5rem' }}>
-                            Set weekly recurring slots for {selectedTrainer.name}.
-                        </p>
+                )
+            }
 
-                        <div style={styles.modalBody}>
-                            {/* Add New Slot Form */}
-                            <div style={{ background: '#27272a', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #333' }}>
-                                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Add New Slot</h3>
+            {
+                showServiceModal && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modal}>
+                            <h2 style={styles.modalTitle}>Add New Service</h2>
+                            <div style={{ ...styles.modalBody, maxHeight: 'none' }}>
                                 <div style={styles.formGroup}>
-                                    <label style={styles.label}>Day</label>
-                                    <select
-                                        value={newAvailability.dayOfWeek}
-                                        onChange={(e) => setNewAvailability({ ...newAvailability, dayOfWeek: parseInt(e.target.value) })}
+                                    <label style={styles.label}>Service Name</label>
+                                    <input
+                                        id="serviceName"
+                                        name="serviceName"
                                         style={styles.input}
+                                        placeholder="e.g., Per Session, Monthly Pass"
+                                        value={newService.name}
+                                        onChange={e => setNewService({ ...newService, name: e.target.value })}
+                                    />
+                                </div>
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        id="servicePrice"
+                                        name="servicePrice"
+                                        style={styles.input}
+                                        placeholder="500"
+                                        value={newService.price}
+                                        onChange={e => setNewService({ ...newService, price: e.target.value })}
+                                    />
+                                </div>
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Service Type</label>
+                                    <select
+                                        id="serviceType"
+                                        name="serviceType"
+                                        style={styles.input}
+                                        value={newService.service_type}
+                                        onChange={e => setNewService({ ...newService, service_type: e.target.value })}
                                     >
-                                        {dayNames.map((day, idx) => (
-                                            <option key={idx} value={idx}>{day}</option>
-                                        ))}
+                                        <option value="session">Session-Based</option>
+                                        <option value="pass">Passes</option>
+                                        <option value="membership">Memberships</option>
                                     </select>
                                 </div>
                                 <div style={styles.row}>
                                     <div style={styles.formGroup}>
-                                        <label style={styles.label}>Start</label>
+                                        <label style={styles.label}>Duration Value</label>
                                         <input
-                                            type="time"
-                                            value={newAvailability.startTime}
-                                            onChange={(e) => setNewAvailability({ ...newAvailability, startTime: e.target.value })}
+                                            type="number"
                                             style={styles.input}
+                                            value={newService.duration_value}
+                                            onChange={e => setNewService({ ...newService, duration_value: e.target.value })}
                                         />
                                     </div>
                                     <div style={styles.formGroup}>
-                                        <label style={styles.label}>End</label>
-                                        <input
-                                            type="time"
-                                            value={newAvailability.endTime}
-                                            onChange={(e) => setNewAvailability({ ...newAvailability, endTime: e.target.value })}
+                                        <label style={styles.label}>Unit</label>
+                                        <select
                                             style={styles.input}
+                                            value={newService.duration_unit}
+                                            onChange={e => setNewService({ ...newService, duration_unit: e.target.value })}
+                                        >
+                                            <option value="hour">Hours</option>
+                                            <option value="day">Days</option>
+                                            <option value="month">Months</option>
+                                            <option value="year">Years</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Description</label>
+                                    <textarea
+                                        style={{ ...styles.input, minHeight: '80px' }}
+                                        placeholder="Briefly describe what's included..."
+                                        value={newService.description}
+                                        onChange={e => setNewService({ ...newService, description: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div style={styles.modalActions}>
+                                <button style={styles.secondaryBtn} onClick={() => setShowServiceModal(false)}>Cancel</button>
+                                <button style={styles.primaryBtn} onClick={handleAddService}>Create Service</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {
+                showAvailabilityModal && selectedTrainer && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modal}>
+                            <h2 style={styles.modalTitle}>Manage Availability</h2>
+                            <p style={{ color: '#a1a1aa', marginBottom: '1.5rem' }}>
+                                Set weekly recurring slots for {selectedTrainer.name}.
+                            </p>
+
+                            <div style={styles.modalBody}>
+                                {/* Add New Slot Form */}
+                                <div style={{ background: '#27272a', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', border: '1px solid #333' }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Add New Slot</h3>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Day</label>
+                                        <select
+                                            value={newAvailability.dayOfWeek}
+                                            onChange={(e) => setNewAvailability({ ...newAvailability, dayOfWeek: parseInt(e.target.value) })}
+                                            style={styles.input}
+                                        >
+                                            {dayNames.map((day, idx) => (
+                                                <option key={idx} value={idx}>{day}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={styles.row}>
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>Start</label>
+                                            <input
+                                                type="time"
+                                                value={newAvailability.startTime}
+                                                onChange={(e) => setNewAvailability({ ...newAvailability, startTime: e.target.value })}
+                                                style={styles.input}
+                                            />
+                                        </div>
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>End</label>
+                                            <input
+                                                type="time"
+                                                value={newAvailability.endTime}
+                                                onChange={(e) => setNewAvailability({ ...newAvailability, endTime: e.target.value })}
+                                                style={styles.input}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button onClick={handleAddAvailability} style={{ ...styles.primaryBtn, width: '100%', justifyContent: 'center' }}>
+                                        <Plus size={16} /> Add Slot
+                                    </button>
+                                </div>
+
+                                {/* Existing Slots List */}
+                                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Current Slots</h3>
+                                {trainerAvailability.length === 0 ? (
+                                    <div style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>No slots configured</div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {trainerAvailability.map((slot) => (
+                                            <div key={slot.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#27272a', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #333' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: 600 }}>{dayNames[slot.day_of_week]}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#a1a1aa' }}>
+                                                        {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => handleDeleteAvailability(slot.id)} style={styles.deleteBtn}>
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={styles.modalActions}>
+                                <button style={styles.secondaryBtn} onClick={() => setShowAvailabilityModal(false)}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {/* Close Modals */}
+            {
+                showTrainerModal && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modal}>
+                            <div style={styles.modalBody}>
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Full Name</label>
+                                    <input
+                                        id="trainerName"
+                                        name="trainerName"
+                                        style={styles.input}
+                                        placeholder="John Doe"
+                                        value={newTrainer.name}
+                                        onChange={(e) => setNewTrainer({ ...newTrainer, name: e.target.value })}
+                                    />
+                                </div>
+                                <div style={styles.row}>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Specializations (comma separated)</label>
+                                        <input
+                                            style={styles.input}
+                                            placeholder="HIIT, Yoga, Strength"
+                                            value={newTrainer.specializations}
+                                            onChange={(e) => setNewTrainer({ ...newTrainer, specializations: e.target.value })}
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Hourly Rate (₹)</label>
+                                        <input
+                                            type="number"
+                                            style={styles.input}
+                                            placeholder="500"
+                                            value={newTrainer.hourly_rate}
+                                            onChange={(e) => setNewTrainer({ ...newTrainer, hourly_rate: e.target.value })}
                                         />
                                     </div>
                                 </div>
-                                <button onClick={handleAddAvailability} style={{ ...styles.primaryBtn, width: '100%', justifyContent: 'center' }}>
-                                    <Plus size={16} /> Add Slot
-                                </button>
-                            </div>
-
-                            {/* Existing Slots List */}
-                            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Current Slots</h3>
-                            {trainerAvailability.length === 0 ? (
-                                <div style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>No slots configured</div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    {trainerAvailability.map((slot) => (
-                                        <div key={slot.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#27272a', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid #333' }}>
-                                            <div>
-                                                <div style={{ fontWeight: 600 }}>{dayNames[slot.day_of_week]}</div>
-                                                <div style={{ fontSize: '0.85rem', color: '#a1a1aa' }}>
-                                                    {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                                                </div>
-                                            </div>
-                                            <button onClick={() => handleDeleteAvailability(slot.id)} style={styles.deleteBtn}>
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={styles.modalActions}>
-                            <button style={styles.secondaryBtn} onClick={() => setShowAvailabilityModal(false)}>Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Close Modals */}
-            {showTrainerModal && (
-                <div style={styles.modalOverlay}>
-                    <div style={styles.modal}>
-                        <div style={styles.modalBody}>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Full Name</label>
-                                <input
-                                    style={styles.input}
-                                    placeholder="John Doe"
-                                    value={newTrainer.name}
-                                    onChange={(e) => setNewTrainer({ ...newTrainer, name: e.target.value })}
-                                />
-                            </div>
-                            <div style={styles.row}>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Specializations (comma separated)</label>
-                                    <input
-                                        style={styles.input}
-                                        placeholder="HIIT, Yoga, Strength"
-                                        value={newTrainer.specializations}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, specializations: e.target.value })}
-                                    />
+                                <div style={styles.row}>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Experience (Years)</label>
+                                        <input
+                                            type="number"
+                                            style={styles.input}
+                                            placeholder="5"
+                                            value={newTrainer.experience_years}
+                                            onChange={(e) => setNewTrainer({ ...newTrainer, experience_years: e.target.value })}
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Certifications (comma separated)</label>
+                                        <input
+                                            style={styles.input}
+                                            placeholder="ACE, NASM"
+                                            value={newTrainer.certifications}
+                                            onChange={(e) => setNewTrainer({ ...newTrainer, certifications: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                                 <div style={styles.formGroup}>
-                                    <label style={styles.label}>Hourly Rate (₹)</label>
-                                    <input
-                                        type="number"
-                                        style={styles.input}
-                                        placeholder="500"
-                                        value={newTrainer.hourly_rate}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, hourly_rate: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div style={styles.row}>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Experience (Years)</label>
-                                    <input
-                                        type="number"
-                                        style={styles.input}
-                                        placeholder="5"
-                                        value={newTrainer.experience_years}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, experience_years: e.target.value })}
-                                    />
-                                </div>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Certifications (comma separated)</label>
-                                    <input
-                                        style={styles.input}
-                                        placeholder="ACE, NASM"
-                                        value={newTrainer.certifications}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, certifications: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div style={styles.row}>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Profile Image</label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={styles.input}
-                                        onChange={(e) => setTrainerFiles({ ...trainerFiles, profileImage: e.target.files[0] })}
+                                    <ImageUpload
+                                        label="Profile Image"
+                                        onUploadSuccess={(url) => setTrainerFiles({ ...trainerFiles, profileImage: url })}
+                                        currentImage={trainerFiles.profileImage}
                                     />
                                 </div>
                                 <div style={styles.formGroup}>
@@ -1174,27 +1204,28 @@ export default function GymDashboard() {
                                         onChange={(e) => setTrainerFiles({ ...trainerFiles, introVideo: e.target.files[0] })}
                                     />
                                 </div>
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Bio</label>
+                                    <textarea
+                                        id="trainerBio"
+                                        name="trainerBio"
+                                        style={{ ...styles.input, minHeight: '80px' }}
+                                        placeholder="Tell us about the trainer..."
+                                        value={newTrainer.bio}
+                                        onChange={(e) => setNewTrainer({ ...newTrainer, bio: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Bio</label>
-                                <textarea
-                                    style={{ ...styles.input, minHeight: '80px' }}
-                                    placeholder="Tell us about the trainer..."
-                                    value={newTrainer.bio}
-                                    onChange={(e) => setNewTrainer({ ...newTrainer, bio: e.target.value })}
-                                />
+                            <div style={styles.modalActions}>
+                                <button style={styles.secondaryBtn} onClick={() => setShowTrainerModal(false)}>Cancel</button>
+                                <button style={styles.primaryBtn} onClick={handleAddTrainer} disabled={loading}>
+                                    {loading ? 'Adding...' : 'Add Trainer'}
+                                </button>
                             </div>
-                        </div>
-                        <div style={styles.modalActions}>
-                            <button style={styles.secondaryBtn} onClick={() => setShowTrainerModal(false)}>Cancel</button>
-                            <button style={styles.primaryBtn} onClick={handleAddTrainer} disabled={loading}>
-                                {loading ? 'Adding...' : 'Add Trainer'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div >
+                )}
+        </div>
     );
 }
 

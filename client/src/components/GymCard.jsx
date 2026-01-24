@@ -42,7 +42,7 @@ export default function GymCard({ gym }) {
                     <div style={styles.rating}>
                         <Star size={14} fill="white" color="white" />
                         <span style={styles.ratingText}>
-                            {gym.rating?.toFixed(1) || '0.0'}
+                            {gym.rating ? Number(gym.rating).toFixed(1) : '0.0'}
                         </span>
                     </div>
                 </div>

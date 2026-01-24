@@ -10,6 +10,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import monetizationRoutes from './routes/monetizationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import superAdminRoutes from './routes/superAdminRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 dotenv.config();
 
@@ -31,10 +32,10 @@ app.use('/api/gyms', gymRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/trainers', trainerRoutes);
 app.use('/api/reviews', reviewRoutes);
-app.use('/api/reviews', reviewRoutes);
 app.use('/api/monetization', monetizationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

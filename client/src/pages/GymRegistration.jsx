@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, MapPin, Phone, Mail, Image, LocateFixed, Loader2 } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, Image as ImageIcon, LocateFixed, Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../services/api';
+import ImageUpload from '../components/ImageUpload';
+import MultiImageUpload from '../components/MultiImageUpload';
 
 export default function GymRegistration() {
     const navigate = useNavigate();
@@ -20,6 +22,7 @@ export default function GymRegistration() {
         facilities: '',
         latitude: '',
         longitude: '',
+        images: [],
     });
     const [locating, setLocating] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -127,6 +130,8 @@ export default function GymRegistration() {
                         <label style={styles.label}>Gym Name *</label>
                         <input
                             type="text"
+                            id="gymName"
+                            name="gymName"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             className="input"
@@ -137,6 +142,8 @@ export default function GymRegistration() {
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Description</label>
                         <textarea
+                            id="gymDescription"
+                            name="gymDescription"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             className="input"
@@ -168,6 +175,8 @@ export default function GymRegistration() {
                         <label style={styles.label}>Address *</label>
                         <input
                             type="text"
+                            id="gymAddress"
+                            name="gymAddress"
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                             className="input"
@@ -180,6 +189,8 @@ export default function GymRegistration() {
                             <label style={styles.label}>City *</label>
                             <input
                                 type="text"
+                                id="gymCity"
+                                name="gymCity"
                                 value={formData.city}
                                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                 className="input"
@@ -225,6 +236,8 @@ export default function GymRegistration() {
                             <label style={styles.label}>Phone *</label>
                             <input
                                 type="tel"
+                                id="gymPhone"
+                                name="gymPhone"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 className="input"
@@ -236,6 +249,8 @@ export default function GymRegistration() {
                             <label style={styles.label}>Email</label>
                             <input
                                 type="email"
+                                id="gymEmail"
+                                name="gymEmail"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 className="input"
@@ -252,6 +267,8 @@ export default function GymRegistration() {
                             <label key={cat.id} style={styles.categoryLabel}>
                                 <input
                                     type="checkbox"
+                                    id={`category-${cat.id}`}
+                                    name="categories"
                                     checked={formData.categories.includes(cat.id)}
                                     onChange={() => handleCategoryToggle(cat.id)}
                                 />
@@ -272,12 +289,28 @@ export default function GymRegistration() {
                         </label>
                         <input
                             type="text"
+                            id="gymFacilities"
+                            name="gymFacilities"
                             value={formData.facilities}
                             onChange={(e) => setFormData({ ...formData, facilities: e.target.value })}
                             className="input"
                             placeholder="e.g., Locker rooms, Showers, Parking, WiFi"
                         />
                     </div>
+                </section>
+
+                {/* Images */}
+                <section style={styles.section}>
+                    <h2 style={styles.sectionTitle}>
+                        <ImageIcon size={24} />
+                        Gym Photos
+                    </h2>
+                    <MultiImageUpload
+                        label="Upload gym photos (up to 8 images)"
+                        currentImages={formData.images || []}
+                        onImagesChange={(images) => setFormData({ ...formData, images })}
+                        maxImages={8}
+                    />
                 </section>
 
                 {/* Submit */}

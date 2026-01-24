@@ -42,7 +42,7 @@ export const getGymDashboardStats = async (req, res) => {
                 [gymId, 'completed']
             ),
             pool.query('SELECT AVG(rating)::DECIMAL(3,2) as avg_rating, COUNT(*) as total FROM reviews WHERE gym_id = $1', [gymId]),
-            pool.query('SELECT COUNT(*) FROM gym_slots WHERE gym_id = $1 AND is_active = true', [gymId]),
+            pool.query('SELECT COUNT(*) FROM gym_time_slots WHERE gym_id = $1 AND is_active = true', [gymId]),
         ]);
 
         res.json({

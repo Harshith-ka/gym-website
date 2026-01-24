@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users Table (synced with Clerk)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     clerk_id VARCHAR(255) UNIQUE NOT NULL, -- Clerk user ID
     email VARCHAR(255) UNIQUE,
@@ -21,7 +21,7 @@ CREATE TABLE users (
 );
 
 -- Gyms Table
-CREATE TABLE gyms (
+CREATE TABLE IF NOT EXISTS gyms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     owner_id UUID REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE gyms (
 );
 
 -- Gym Services (Sessions, Passes, Memberships)
-CREATE TABLE gym_services (
+CREATE TABLE IF NOT EXISTS gym_services (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
     service_type VARCHAR(20) NOT NULL, -- 'session', 'pass', 'membership'
@@ -65,7 +65,7 @@ CREATE TABLE gym_services (
 );
 
 -- Time Slots for Gyms
-CREATE TABLE gym_time_slots (
+CREATE TABLE IF NOT EXISTS gym_time_slots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
     day_of_week INTEGER NOT NULL, -- 0=Sunday, 1=Monday, ..., 6=Saturday
@@ -77,7 +77,7 @@ CREATE TABLE gym_time_slots (
 );
 
 -- Trainers Table
-CREATE TABLE trainers (
+CREATE TABLE IF NOT EXISTS trainers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     gym_id UUID REFERENCES gyms(id) ON DELETE SET NULL,
@@ -97,7 +97,7 @@ CREATE TABLE trainers (
 );
 
 -- Trainer Availability
-CREATE TABLE trainer_availability (
+CREATE TABLE IF NOT EXISTS trainer_availability (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     trainer_id UUID REFERENCES trainers(id) ON DELETE CASCADE,
     day_of_week INTEGER NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE trainer_availability (
 );
 
 -- Bookings Table
-CREATE TABLE bookings (
+CREATE TABLE IF NOT EXISTS bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
@@ -136,7 +136,7 @@ CREATE TABLE bookings (
 );
 
 -- Trainer Bookings
-CREATE TABLE trainer_bookings (
+CREATE TABLE IF NOT EXISTS trainer_bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     trainer_id UUID REFERENCES trainers(id) ON DELETE CASCADE,
@@ -157,7 +157,7 @@ CREATE TABLE trainer_bookings (
 );
 
 -- Reviews Table (for both gyms and trainers)
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
@@ -176,7 +176,7 @@ CREATE TABLE reviews (
 );
 
 -- Wishlist Table
-CREATE TABLE wishlist (
+CREATE TABLE IF NOT EXISTS wishlist (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
@@ -185,7 +185,7 @@ CREATE TABLE wishlist (
 );
 
 -- Featured Listings (Paid Promotions)
-CREATE TABLE featured_listings (
+CREATE TABLE IF NOT EXISTS featured_listings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
     package_type VARCHAR(20) NOT NULL, -- 'basic', 'premium', 'platinum'
@@ -199,7 +199,7 @@ CREATE TABLE featured_listings (
 );
 
 -- Gym Subscriptions (Monthly plans for gym owners)
-CREATE TABLE gym_subscriptions (
+CREATE TABLE IF NOT EXISTS gym_subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
     plan_type VARCHAR(20) NOT NULL, -- 'basic', 'pro', 'enterprise'
@@ -213,7 +213,7 @@ CREATE TABLE gym_subscriptions (
 );
 
 -- Payment Transactions
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     gym_id UUID REFERENCES gyms(id) ON DELETE SET NULL,
@@ -228,7 +228,7 @@ CREATE TABLE transactions (
 );
 
 -- Payouts (Gym Withdrawals)
-CREATE TABLE payouts (
+CREATE TABLE IF NOT EXISTS payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     gym_id UUID REFERENCES gyms(id) ON DELETE CASCADE,
     trainer_id UUID REFERENCES trainers(id) ON DELETE CASCADE,
@@ -245,7 +245,7 @@ CREATE TABLE payouts (
 );
 
 -- Notifications Table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -257,7 +257,7 @@ CREATE TABLE notifications (
 );
 
 -- System Settings (Global Config)
-CREATE TABLE system_settings (
+CREATE TABLE IF NOT EXISTS system_settings (
     key VARCHAR(50) PRIMARY KEY,
     value TEXT NOT NULL,
     description TEXT,

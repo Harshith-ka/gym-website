@@ -76,6 +76,8 @@ export default function ReviewForm({ gymId, trainerId, bookingId, trainerBooking
             <div style={styles.inputGroup}>
                 <label style={styles.label}>Your Review</label>
                 <textarea
+                    id="review-comment"
+                    name="comment"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Share your experience..."

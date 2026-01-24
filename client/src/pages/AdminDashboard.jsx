@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
+import ImageUpload from '../components/ImageUpload';
 
 export default function AdminDashboard() {
     const { getToken } = useAuth();
@@ -18,6 +19,15 @@ export default function AdminDashboard() {
     const [staticPages, setStaticPages] = useState([]);
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Form states
+    const [showAddTrainer, setShowAddTrainer] = useState(false);
+    const [trainerFormData, setTrainerFormData] = useState({
+        user_id: '', gym_id: '', bio: '', specializations: [], experience_years: '', hourly_rate: '', profile_image: ''
+    });
+    const [bannerFormData, setBannerFormData] = useState({
+        image_url: '', title: '', subtitle: '', link_url: ''
+    });
 
     useEffect(() => {
         fetchData();
@@ -97,6 +107,21 @@ export default function AdminDashboard() {
         }
     };
 
+
+    const handleAddTrainer = async (e) => {
+        e.preventDefault();
+        try {
+            const token = await getToken();
+            await api.post('/super-admin/trainers', trainerFormData, { headers: { Authorization: `Bearer ${token}` } });
+            setShowAddTrainer(false);
+            fetchData();
+            alert('Trainer assigned successfully!');
+        } catch (error) {
+            console.error('Error assigning trainer:', error);
+            alert('Failed to assign trainer: ' + (error.response?.data?.error || error.message));
+        }
+    };
+
     const TabButton = ({ id, label, icon: Icon }) => (
         <button
             onClick={() => setActiveTab(id)}
@@ -108,11 +133,11 @@ export default function AdminDashboard() {
 
     return (
         <div style={styles.container}>
-            <div style={styles.sidebar}>
+            <aside className="dashboard-sidebar admin-sidebar" style={styles.sidebar}>
                 <div style={styles.logo}>
                     <span style={{ color: '#8B5CF6' }}>Super</span>Admin
                 </div>
-                <div style={styles.tabList}>
+                <div className="dashboard-tab-list" style={styles.tabList}>
                     <TabButton id="overview" label="Overview" icon={BarChart3} />
                     <TabButton id="users" label="Users" icon={Users} />
                     <TabButton id="gyms" label="Gyms" icon={Building2} />
@@ -132,15 +157,15 @@ export default function AdminDashboard() {
                         <div style={styles.userRole}>Super Admin</div>
                     </div>
                 </div>
-            </div>
+            </aside>
 
-            <div style={styles.mainContent}>
-                <div style={styles.header}>
+            <main className="dashboard-main admin-main" style={styles.mainContent}>
+                <header className="dashboard-header admin-header" style={styles.header}>
                     <h1 style={styles.pageTitle}>
                         {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     </h1>
                     <button style={styles.iconBtn}><Bell size={20} /></button>
-                </div>
+                </header>
 
                 {loading ? (
                     <div style={styles.loading}><div className="spinner" /></div>
@@ -156,48 +181,86 @@ export default function AdminDashboard() {
                         )}
 
                         {activeTab === 'users' && (
-                            <div style={styles.card}>
+                            <div className="table-container" style={styles.card}>
                                 <div style={styles.tableHeader}>
                                     <div style={styles.searchBox}>
                                         <Search size={18} color="#666" />
                                         <input placeholder="Search users..." style={styles.searchInput} />
                                     </div>
                                 </div>
+                                <div className="responsive-table">
+                                    <table style={styles.table}>
+                                        <thead>
+                                            <tr>
+                                                <th style={styles.th}>Name</th>
+                                                <th style={styles.th}>Email</th>
+                                                <th style={styles.th}>Role</th>
+                                                <th style={styles.th}>Status</th>
+                                                <th style={styles.th}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {users.map(user => (
+                                                <tr key={user.id}>
+                                                    <td style={styles.td}>{user.name}</td>
+                                                    <td style={styles.td}>{user.email}</td>
+                                                    <td style={styles.td}>
+                                                        <span style={{ ...styles.badge, background: '#333', color: '#bbb' }}>{user.role}</span>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <span style={{
+                                                            ...styles.badge,
+                                                            background: user.is_active ? '#064e3b' : '#7f1d1d',
+                                                            color: user.is_active ? '#6ee7b7' : '#fca5a5'
+                                                        }}>
+                                                            {user.is_active ? 'Active' : 'Blocked'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <button
+                                                            onClick={() => handleUserAction(user.id, user.is_active)}
+                                                            style={styles.actionBtn}
+                                                        >
+                                                            {user.is_active ? <Lock size={16} /> : <Unlock size={16} />}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'trainers' && (
+                            <div style={styles.card}>
+                                <div style={styles.tableHeader}>
+                                    <h3 style={styles.subTitle}>Manage Trainers</h3>
+                                    <button
+                                        onClick={() => setShowAddTrainer(true)}
+                                        style={{ ...styles.btn, width: 'auto', padding: '0 1rem', background: '#10B981' }}
+                                    >
+                                        + Assign Trainer
+                                    </button>
+                                </div>
                                 <table style={styles.table}>
                                     <thead>
                                         <tr>
-                                            <th style={styles.th}>Name</th>
-                                            <th style={styles.th}>Email</th>
-                                            <th style={styles.th}>Role</th>
-                                            <th style={styles.th}>Status</th>
-                                            <th style={styles.th}>Action</th>
+                                            <th style={styles.th}>Trainer</th>
+                                            <th style={styles.th}>Gym</th>
+                                            <th style={styles.th}>Specializations</th>
+                                            <th style={styles.th}>Experience</th>
+                                            <th style={styles.th}>Rate</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.map(user => (
-                                            <tr key={user.id}>
-                                                <td style={styles.td}>{user.name}</td>
-                                                <td style={styles.td}>{user.email}</td>
-                                                <td style={styles.td}>
-                                                    <span style={{ ...styles.badge, background: '#333', color: '#bbb' }}>{user.role}</span>
-                                                </td>
-                                                <td style={styles.td}>
-                                                    <span style={{
-                                                        ...styles.badge,
-                                                        background: user.is_active ? '#064e3b' : '#7f1d1d',
-                                                        color: user.is_active ? '#6ee7b7' : '#fca5a5'
-                                                    }}>
-                                                        {user.is_active ? 'Active' : 'Blocked'}
-                                                    </span>
-                                                </td>
-                                                <td style={styles.td}>
-                                                    <button
-                                                        onClick={() => handleUserAction(user.id, user.is_active)}
-                                                        style={styles.actionBtn}
-                                                    >
-                                                        {user.is_active ? <Lock size={16} /> : <Unlock size={16} />}
-                                                    </button>
-                                                </td>
+                                        {trainers.map(t => (
+                                            <tr key={t.id}>
+                                                <td style={styles.td}>{t.name}</td>
+                                                <td style={styles.td}>{t.gym_name || 'N/A'}</td>
+                                                <td style={styles.td}>{t.specializations?.join(', ')}</td>
+                                                <td style={styles.td}>{t.experience_years} Years</td>
+                                                <td style={styles.td}>₹{t.hourly_rate}/hr</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -319,9 +382,9 @@ export default function AdminDashboard() {
                                         } catch (err) { alert('Failed'); }
                                     }}
                                 >
-                                    <input name="title" placeholder="Notification Title" style={styles.input} required />
-                                    <textarea name="message" placeholder="Message content..." style={{ ...styles.input, height: '100px' }} required />
-                                    <select name="type" style={styles.input}>
+                                    <input id="broadcast-title" name="title" placeholder="Notification Title" style={styles.input} required />
+                                    <textarea id="broadcast-message" name="message" placeholder="Message content..." style={{ ...styles.input, height: '100px' }} required />
+                                    <select id="broadcast-type" name="type" style={styles.input}>
                                         <option value="system">System Alert</option>
                                         <option value="promotion">Promotion</option>
                                     </select>
@@ -354,19 +417,24 @@ export default function AdminDashboard() {
                                 <h4 style={{ marginTop: '2rem' }}>Add New Banner</h4>
                                 <form onSubmit={async (e) => {
                                     e.preventDefault();
-                                    const formData = new FormData(e.target);
-                                    const bannerData = Object.fromEntries(formData);
                                     try {
                                         const token = await getToken();
-                                        await api.post('/super-admin/banners', { action: 'create', bannerData }, { headers: { Authorization: `Bearer ${token}` } });
+                                        await api.post('/super-admin/banners', { action: 'create', bannerData: bannerFormData }, { headers: { Authorization: `Bearer ${token}` } });
                                         fetchData();
-                                        e.target.reset();
+                                        setBannerFormData({ image_url: '', title: '', subtitle: '', link_url: '' });
+                                        alert('Banner added!');
                                     } catch (err) { alert('Failed'); }
                                 }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                    <input name="image_url" placeholder="Image URL" style={styles.input} required />
-                                    <input name="title" placeholder="Title" style={styles.input} />
-                                    <input name="subtitle" placeholder="Subtitle" style={styles.input} />
-                                    <input name="link_url" placeholder="Link URL" style={styles.input} />
+                                    <div style={{ gridColumn: 'span 2' }}>
+                                        <ImageUpload
+                                            label="Banner Image"
+                                            onUploadSuccess={(url) => setBannerFormData({ ...bannerFormData, image_url: url })}
+                                            currentImage={bannerFormData.image_url}
+                                        />
+                                    </div>
+                                    <input placeholder="Title" value={bannerFormData.title} onChange={e => setBannerFormData({ ...bannerFormData, title: e.target.value })} style={styles.input} />
+                                    <input placeholder="Subtitle" value={bannerFormData.subtitle} onChange={e => setBannerFormData({ ...bannerFormData, subtitle: e.target.value })} style={styles.input} />
+                                    <input placeholder="Link URL" value={bannerFormData.link_url} onChange={e => setBannerFormData({ ...bannerFormData, link_url: e.target.value })} style={styles.input} />
                                     <button type="submit" style={{ gridColumn: 'span 2', ...styles.btn, width: 'auto', background: '#10B981' }}>Add Banner</button>
                                 </form>
                             </div>
@@ -409,15 +477,15 @@ export default function AdminDashboard() {
                                         alert('Ad created!');
                                     } catch (err) { alert('Failed to create ad'); }
                                 }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                    <input name="gym_id" placeholder="Gym UUID" style={styles.input} required />
-                                    <select name="type" style={styles.input} required>
+                                    <input id="ad-gym-id" name="gym_id" placeholder="Gym UUID" style={styles.input} required />
+                                    <select id="ad-type" name="type" style={styles.input} required>
                                         <option value="sponsored">Sponsored</option>
                                         <option value="homepage_banner">Homepage Banner</option>
                                         <option value="location_promo">Location Promo</option>
                                     </select>
-                                    <input name="pricing" type="number" placeholder="Pricing (₹)" style={styles.input} required />
-                                    <input name="start_date" type="date" style={styles.input} required />
-                                    <input name="end_date" type="date" style={styles.input} required />
+                                    <input id="ad-pricing" name="pricing" type="number" placeholder="Pricing (₹)" style={styles.input} required />
+                                    <input id="ad-start" name="start_date" type="date" style={styles.input} required />
+                                    <input id="ad-end" name="end_date" type="date" style={styles.input} required />
                                     <button type="submit" style={{ gridColumn: 'span 2', ...styles.btn, width: 'auto', background: '#8B5CF6' }}>Create Ad</button>
                                 </form>
                             </div>
@@ -577,8 +645,86 @@ export default function AdminDashboard() {
                         )}
                     </>
                 )}
-            </div>
-        </div>
+            </main >
+
+
+            {/* Add Trainer Modal */}
+            {
+                showAddTrainer && (
+                    <div style={styles.modalOverlay}>
+                        <div style={styles.modal}>
+                            <div style={styles.modalHeader}>
+                                <h3>Assign Trainer to Gym</h3>
+                                <button onClick={() => setShowAddTrainer(false)} style={styles.iconBtn}><X size={20} /></button>
+                            </div>
+                            <form onSubmit={handleAddTrainer} style={styles.form}>
+                                <div style={styles.inputGroup}>
+                                    <label>User</label>
+                                    <select
+                                        style={styles.input}
+                                        required
+                                        value={trainerFormData.user_id}
+                                        onChange={e => setTrainerFormData({ ...trainerFormData, user_id: e.target.value })}
+                                    >
+                                        <option value="">Select User</option>
+                                        {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+                                    </select>
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <ImageUpload
+                                        label="Profile Image"
+                                        onUploadSuccess={(url) => setTrainerFormData({ ...trainerFormData, profile_image: url })}
+                                        currentImage={trainerFormData.profile_image}
+                                    />
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <label>Gym</label>
+                                    <select
+                                        style={styles.input}
+                                        required
+                                        value={trainerFormData.gym_id}
+                                        onChange={e => setTrainerFormData({ ...trainerFormData, gym_id: e.target.value })}
+                                    >
+                                        <option value="">Select Gym</option>
+                                        {gyms.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                    </select>
+                                </div>
+                                <div style={styles.grid2}>
+                                    <div style={styles.inputGroup}>
+                                        <label>Experience (Years)</label>
+                                        <input
+                                            type="number"
+                                            style={styles.input}
+                                            value={trainerFormData.experience_years}
+                                            onChange={e => setTrainerFormData({ ...trainerFormData, experience_years: e.target.value })}
+                                        />
+                                    </div>
+                                    <div style={styles.inputGroup}>
+                                        <label>Hourly Rate (₹)</label>
+                                        <input
+                                            type="number"
+                                            style={styles.input}
+                                            value={trainerFormData.hourly_rate}
+                                            onChange={e => setTrainerFormData({ ...trainerFormData, hourly_rate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={styles.inputGroup}>
+                                    <label>Specializations (comma-separated)</label>
+                                    <input
+                                        style={styles.input}
+                                        placeholder="weight_loss, yoga, muscle_gain"
+                                        value={trainerFormData.specializations.join(', ')}
+                                        onChange={e => setTrainerFormData({ ...trainerFormData, specializations: e.target.value.split(',').map(c => c.trim()).filter(Boolean) })}
+                                    />
+                                </div>
+                                <button type="submit" style={{ ...styles.btn, background: '#10B981', padding: '0.75rem', width: '100%' }}>Assign Trainer</button>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
 
@@ -816,5 +962,48 @@ const styles = {
     subTitle: {
         fontSize: '1.1rem',
         marginTop: '0',
-    }
+    },
+    modalOverlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '1rem',
+    },
+    modal: {
+        background: '#111',
+        border: '1px solid #333',
+        borderRadius: '1rem',
+        width: '100%',
+        maxWidth: '600px',
+        padding: '2rem',
+    },
+    modalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem',
+    },
+    form: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.25rem',
+    },
+    grid2: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '1rem',
+    },
+    grid3: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr 1fr',
+        gap: '1rem',
+    },
 };

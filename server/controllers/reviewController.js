@@ -139,3 +139,28 @@ export const getTrainerReviews = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch reviews' });
     }
 };
+
+// Get All Reviews (Home Page)
+export const getAllReviews = async (req, res) => {
+    try {
+        const { limit = 6 } = req.query;
+
+        const result = await pool.query(
+            `SELECT r.*, u.name as user_name, u.profile_image as user_image, g.name as gym_name
+       FROM reviews r
+       JOIN users u ON r.user_id = u.id
+       LEFT JOIN gyms g ON r.gym_id = g.id
+       WHERE r.rating >= 4
+       ORDER BY r.created_at DESC
+       LIMIT $1`,
+            [limit]
+        );
+
+        res.json({
+            reviews: result.rows
+        });
+    } catch (error) {
+        console.error('Get all reviews error:', error);
+        res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+};

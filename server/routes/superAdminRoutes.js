@@ -21,7 +21,8 @@ import {
     getStaticPages,
     updateStaticPage,
     getAdsPerformance,
-    createSponsoredAd
+    createSponsoredAd,
+    addTrainerToGym
 } from '../controllers/superAdminController.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 
@@ -69,5 +70,8 @@ router.put('/static-pages/:slug', updateStaticPage);
 // Ads & Promotions
 router.get('/ads/performance', getAdsPerformance);
 router.post('/ads', createSponsoredAd);
+
+// Creation
+router.post('/trainers', addTrainerToGym);
 
 export default router;

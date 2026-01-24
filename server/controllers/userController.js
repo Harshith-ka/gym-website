@@ -7,8 +7,11 @@ import pool from '../config/database.js';
 export const getUserProfile = async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT id, clerk_id, email, phone, name, age, profile_image, role, fitness_interests, created_at 
-       FROM users WHERE id = $1`,
+            `SELECT u.id, u.clerk_id, u.email, u.phone, u.name, u.age, u.profile_image, u.role, u.fitness_interests, u.created_at,
+                    g.is_approved as gym_approved, g.id as gym_id
+             FROM users u 
+             LEFT JOIN gyms g ON u.id = g.owner_id 
+             WHERE u.id = $1`,
             [req.user.id]
         );
 
@@ -153,6 +156,7 @@ export const removeFromWishlist = async (req, res) => {
 export const getUserStats = async (req, res) => {
     try {
         const userId = req.user.id;
+        console.log(`📊 [Stats] Fetching stats for user: ${userId}`);
         const today = new Date();
 
         // 1. Total Workouts (Completed/Used bookings)

@@ -206,7 +206,7 @@ export const getTransactions = async (req, res) => {
         const result = await pool.query(`
             SELECT t.*, u.name as user_name 
             FROM transactions t 
-            JOIN users u ON t.user_id = u.id 
+            LEFT JOIN users u ON t.user_id = u.id::text 
             ORDER BY t.created_at DESC LIMIT 100
         `);
         res.json({ transactions: result.rows });
@@ -221,7 +221,7 @@ export const getPayouts = async (req, res) => {
         const result = await pool.query(`
             SELECT p.*, g.name as gym_name 
             FROM payouts p 
-            LEFT JOIN gyms g ON p.gym_id = g.id 
+            LEFT JOIN gyms g ON p.gym_id = g.id::text 
             ORDER BY p.created_at DESC
         `);
         res.json({ payouts: result.rows });
@@ -355,7 +355,7 @@ export const getAdsPerformance = async (req, res) => {
         const result = await pool.query(`
             SELECT a.*, g.name as gym_name 
             FROM ads_promotions a 
-            JOIN gyms g ON a.gym_id = g.id 
+            JOIN gyms g ON a.gym_id::uuid = g.id 
             ORDER BY a.created_at DESC
         `);
         res.json({ ads: result.rows });
@@ -376,5 +376,50 @@ export const createSponsoredAd = async (req, res) => {
     } catch (error) {
         console.error('Create ad error:', error);
         res.status(500).json({ error: 'Failed to create ad' });
+    }
+};
+
+export const addTrainerToGym = async (req, res) => {
+    try {
+        const { user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate } = req.body;
+
+        if (!user_id || !gym_id) {
+            return res.status(400).json({ error: 'User ID and Gym ID are required' });
+        }
+
+        // Check if trainer profile already exists
+        const existing = await pool.query('SELECT id FROM trainers WHERE user_id = $1', [user_id]);
+
+        let result;
+        if (existing.rows.length > 0) {
+            result = await pool.query(
+                `UPDATE trainers SET 
+                    gym_id = $1, 
+                    bio = COALESCE($2, bio), 
+                    specializations = COALESCE($3, specializations),
+                    experience_years = COALESCE($4, experience_years),
+                    certifications = COALESCE($5, certifications),
+                    hourly_rate = COALESCE($6, hourly_rate),
+                    is_active = true
+                WHERE user_id = $7 RETURNING *`,
+                [gym_id, bio, specializations, experience_years, certifications, hourly_rate, user_id]
+            );
+        } else {
+            result = await pool.query(
+                `INSERT INTO trainers (
+                    user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING *`,
+                [user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate]
+            );
+        }
+
+        // Update user role to trainer if not already
+        await pool.query("UPDATE users SET role = 'trainer' WHERE id = $1 AND role = 'user'", [user_id]);
+
+        res.status(201).json({ message: 'Trainer assigned to gym successfully', trainer: result.rows[0] });
+    } catch (error) {
+        console.error('Admin add trainer error:', error);
+        res.status(500).json({ error: 'Failed to assign trainer' });
     }
 };

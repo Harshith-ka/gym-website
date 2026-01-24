@@ -1,60 +1,129 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, Dumbbell, Heart, Play, Award, TrendingUp } from 'lucide-react';
 
 export default function Categories() {
     const categories = [
-        { name: 'Workout', icon: '💪', color: '#8B5CF6', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop', description: 'Strength training and bodybuilding' },
-        { name: 'Yoga', icon: '🧘', color: '#06B6D4', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop', description: 'Mind and body wellness' },
-        { name: 'Dance', icon: '💃', color: '#EC4899', image: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=600&auto=format&fit=crop', description: 'Dance fitness and choreography' },
-        { name: 'Zumba', icon: '🎵', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?q=80&w=600&auto=format&fit=crop', description: 'High-energy dance workouts' },
-        { name: 'CrossFit', icon: '🏋️', color: '#10B981', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop', description: 'High-intensity functional training' },
-        { name: 'Badminton', icon: '🏸', color: '#EF4444', image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600&auto=format&fit=crop', description: 'Indoor sports and games' },
+        { name: 'Workout', desc: 'High-intensity strength and cardio training for all levels.', image: '/src/assets/categories/category_workout_1768968216853.png', color: '#8B5CF6', area: 'workout' },
+        { name: 'Yoga', desc: 'Find your balance and flexibility with our expert-led yoga sessions.', image: '/src/assets/categories/category_yoga_1768968232399.png', color: '#06B6D4', area: 'yoga' },
+        { name: 'Dance', desc: 'Express yourself and stay fit with our energetic dance classes.', image: '/src/assets/categories/category_dance_1768968250236.png', color: '#EC4899', area: 'dance' },
+        { name: 'Zumba', desc: 'Party yourself into shape with our rhythm-based cardio workouts.', image: '/src/assets/categories/category_zumba_1768968273976.png', color: '#F59E0B', area: 'zumba' },
+        { name: 'CrossFit', desc: 'Challenge your limits with our functional fitness programs.', image: '/src/assets/categories/category_crossfit_1768968291984.png', color: '#10B981', area: 'crossfit' },
+        { name: 'Badminton', desc: 'Improve your agility and precision on our professional courts.', image: '/src/assets/categories/category_badminton_1768968311997.png', color: '#EF4444', area: 'badminton' },
     ];
+
+    // Scroll Reveal Logic
+    useEffect(() => {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const revealElements = document.querySelectorAll('.scroll-reveal');
+        revealElements.forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <div style={{ background: '#000', color: 'white', minHeight: '100vh' }}>
             <div className="container" style={styles.container}>
-                <h1 style={styles.title}>Browse by Category</h1>
-                <p style={styles.subtitle}>Find premium fitness spaces that match your goals</p>
+                <div style={styles.centeredHeader}>
+                    <span style={styles.sectionLabel}>Discover Your Potential</span>
+                    <h1 style={styles.title}>Browse by Category</h1>
+                    <p style={styles.subtitle}>Find premium fitness spaces that match your goals</p>
+                </div>
 
-                <div className="grid grid-3" style={{ marginTop: '4rem' }}>
-                    {categories.map((cat) => (
+                <div style={styles.categoriesGrid}>
+                    {categories.map((cat, index) => (
                         <Link
                             key={cat.name}
                             to={`/category/${cat.name.toLowerCase()}`}
-                            style={styles.categoryCard}
+                            style={{
+                                ...styles.categoryCard3D,
+                                backgroundColor: cat.color,
+                                gridArea: cat.area,
+                                animationDelay: `${index * 0.1}s`
+                            }}
+                            className="scroll-reveal"
                         >
-                            <div style={styles.imageContainer}>
-                                <img src={cat.image} alt={cat.name} style={styles.image} />
-                                <div style={styles.overlay}>
-                                    <div style={{ ...styles.content, borderLeft: `4px solid ${cat.color}` }}>
-                                        <div style={styles.header}>
-                                            <span style={styles.icon}>{cat.icon}</span>
-                                            <h3 style={styles.categoryName}>{cat.name}</h3>
-                                        </div>
-                                        <p style={styles.categoryDesc}>{cat.description}</p>
-                                    </div>
-                                </div>
+                            <div style={styles.cardInfoTop}>
+                                <h3 style={styles.cardTitle3D}>{cat.name}</h3>
+                                <p style={styles.cardDesc3D}>{cat.desc}</p>
+                            </div>
+                            <div style={styles.cardImageContainer} className="image-container">
+                                <img src={cat.image} alt={cat.name} style={styles.cardImage3D} />
                             </div>
                         </Link>
                     ))}
                 </div>
             </div>
+            {/* Global Smooth Animations */}
+            <style>{`
+                .scroll-reveal {
+                    opacity: 0;
+                    transform: translateY(40px);
+                    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                }
+
+                .reveal-active {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                .scroll-reveal:hover {
+                    transform: scale(1.02) translateY(-10px);
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+                    z-index: 10;
+                }
+
+                .scroll-reveal:hover .image-container {
+                    transform: scale(1.1) rotate(0deg) translate(-10px, -10px);
+                }
+
+                .scroll-reveal:hover h3 {
+                    transform: translateX(10px);
+                    transition: all 0.3s ease;
+                }
+            `}</style>
         </div>
     );
 }
 
 const styles = {
     container: {
-        paddingTop: '5rem',
+        paddingTop: '6rem',
         paddingBottom: '8rem',
+    },
+    centeredHeader: {
         textAlign: 'center',
+        marginBottom: '5rem',
+    },
+    sectionLabel: {
+        display: 'block',
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        color: '#8B5CF6',
+        textTransform: 'uppercase',
+        letterSpacing: '2px',
+        marginBottom: '1rem',
     },
     title: {
-        fontSize: '3.5rem',
+        fontSize: '4rem',
         fontWeight: 800,
-        marginBottom: '1rem',
-        letterSpacing: '-1px',
+        color: 'white',
+        letterSpacing: '-2px',
+        marginBottom: '1.5rem',
+        lineHeight: 1,
     },
     subtitle: {
         fontSize: '1.25rem',
@@ -62,62 +131,61 @@ const styles = {
         maxWidth: '600px',
         margin: '0 auto',
     },
-    categoryCard: {
-        height: '320px',
-        borderRadius: '2rem',
-        overflow: 'hidden',
+    categoriesGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateAreas: `
+            "workout yoga dance"
+            "zumba crossfit badminton"
+        `,
+        gap: '2.5rem',
+        marginTop: '3rem',
+    },
+    categoryCard3D: {
         position: 'relative',
-        textDecoration: 'none',
-        transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        cursor: 'pointer',
-    },
-    imageContainer: {
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-    },
-    overlay: {
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-end',
-        padding: '2rem',
+        justifyContent: 'space-between',
+        height: '520px',
+        padding: '3rem',
+        borderRadius: '3.5rem',
+        border: '14px solid #000',
+        textDecoration: 'none',
+        overflow: 'hidden',
+        transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        cursor: 'pointer',
     },
-    content: {
-        textAlign: 'left',
-        paddingLeft: '1.5rem',
-        background: 'rgba(0,0,0,0.2)',
-        backdropFilter: 'blur(10px)',
-        padding: '1.5rem',
-        borderRadius: '1rem',
-        border: '1px solid rgba(255,255,255,0.1)',
+    cardInfoTop: {
+        zIndex: 2,
+        position: 'relative',
     },
-    header: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
-        marginBottom: '0.75rem',
-    },
-    icon: {
-        fontSize: '2rem',
-    },
-    categoryName: {
-        fontSize: '1.5rem',
-        fontWeight: 700,
+    cardTitle3D: {
+        fontSize: '3rem',
+        fontWeight: 800,
         color: 'white',
-        margin: 0,
+        lineHeight: 1,
+        marginBottom: '1.25rem',
+        letterSpacing: '-1.5px',
     },
-    categoryDesc: {
-        color: '#d4d4d8',
-        fontSize: '0.95rem',
-        lineHeight: 1.5,
-        margin: 0,
+    cardDesc3D: {
+        fontSize: '1.1rem',
+        color: 'rgba(255, 255, 255, 0.8)',
+        lineHeight: 1.6,
+        maxWidth: '85%',
+    },
+    cardImageContainer: {
+        position: 'absolute',
+        bottom: '-5%',
+        right: '-5%',
+        width: '85%',
+        height: '75%',
+        zIndex: 1,
+        transition: 'all 0.5s ease',
+    },
+    cardImage3D: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+        transform: 'rotate(-5deg)',
     },
 };

@@ -78,6 +78,8 @@ export default function ReviewModal({ booking, onClose, onSuccess }) {
                     </div>
 
                     <textarea
+                        id="modal-review-comment"
+                        name="comment"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         placeholder="Share your experience..."

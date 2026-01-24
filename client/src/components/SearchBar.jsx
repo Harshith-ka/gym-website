@@ -53,6 +53,8 @@ export default function SearchBar() {
                 <Search size={20} color="var(--text-secondary)" />
                 <input
                     type="text"
+                    id="search-query"
+                    name="search-query"
                     placeholder="Search gyms, trainers, activities..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -66,6 +68,8 @@ export default function SearchBar() {
                 <MapPin size={20} color="var(--text-secondary)" />
                 <input
                     type="text"
+                    id="search-location"
+                    name="search-location"
                     placeholder="Location or City"
                     value={location}
                     onChange={(e) => {

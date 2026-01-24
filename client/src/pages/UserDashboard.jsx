@@ -7,6 +7,7 @@ import {
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
 import ReviewModal from '../components/ReviewModal';
+import ImageUpload from '../components/ImageUpload';
 
 export default function UserDashboard() {
     const { getToken } = useAuth();
@@ -20,6 +21,7 @@ export default function UserDashboard() {
     const [metrics, setMetrics] = useState([]);
     const [showMetricModal, setShowMetricModal] = useState(false);
     const [newMetric, setNewMetric] = useState({ height: '', weight: '' });
+    const [profileData, setProfileData] = useState({ name: '', profile_image: '' });
 
     useEffect(() => {
         fetchData();
@@ -50,6 +52,14 @@ export default function UserDashboard() {
                 setMetrics(metricsRes.data.metrics || []);
             }
 
+            if (activeTab === 'settings') {
+                const profileRes = await api.get('/auth/me', { headers });
+                setProfileData({
+                    name: profileRes.data.user?.name || '',
+                    profile_image: profileRes.data.user?.profile_image || ''
+                });
+            }
+
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
@@ -70,6 +80,24 @@ export default function UserDashboard() {
         } catch (error) {
             console.error('Error recording metrics:', error);
             alert(error.response?.data?.error || 'Failed to record metrics');
+        }
+    };
+
+    const handleUpdateProfile = async (e) => {
+        e.preventDefault();
+        try {
+            const token = await getToken();
+            await api.put('/users/profile', {
+                name: profileData.name,
+                profileImage: profileData.profile_image
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Profile updated successfully!');
+            fetchData();
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile');
         }
     };
 
@@ -106,10 +134,10 @@ export default function UserDashboard() {
         <div style={styles.container}>
             <div className="container">
                 {/* Header Section */}
-                <div style={styles.header}>
-                    <div style={styles.userInfo}>
+                <header className="dashboard-header user-dashboard-header" style={styles.header}>
+                    <div className="user-info" style={styles.userInfo}>
                         <img
-                            src={user?.imageUrl}
+                            src={profileData.profile_image || user?.imageUrl}
                             alt="Profile"
                             style={styles.avatar}
                         />
@@ -120,7 +148,7 @@ export default function UserDashboard() {
                     </div>
                     {/* Floating Ticket for Next Session (Desktop) */}
                     {nextSession && (
-                        <div style={styles.ticketWidget}>
+                        <div className="ticket-widget" style={styles.ticketWidget}>
                             <div style={styles.ticketContent}>
                                 <div style={styles.ticketHeader}>
                                     <span style={styles.ticketLabel}>UPCOMING SESSION</span>
@@ -141,10 +169,10 @@ export default function UserDashboard() {
                             </Link>
                         </div>
                     )}
-                </div>
+                </header>
 
                 {/* Stats Grid */}
-                <div style={styles.statsGrid}>
+                <div className="dashboard-stats-grid" style={styles.statsGrid}>
                     <div style={styles.statCard}>
                         <div style={{ ...styles.statIcon, background: 'rgba(59, 130, 246, 0.2)', color: '#60A5FA' }}>
                             <Dumbbell size={24} />
@@ -188,7 +216,7 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Navigation Tabs */}
-                <div style={styles.tabs}>
+                <div className="dashboard-tabs" style={styles.tabs}>
                     <button
                         onClick={() => setActiveTab('overview')}
                         style={activeTab === 'overview' ? styles.activeTab : styles.tab}
@@ -212,6 +240,12 @@ export default function UserDashboard() {
                         style={activeTab === 'health' ? styles.activeTab : styles.tab}
                     >
                         Health Stats
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        style={activeTab === 'settings' ? styles.activeTab : styles.tab}
+                    >
+                        Settings
                     </button>
                 </div>
 
@@ -390,6 +424,34 @@ export default function UserDashboard() {
                             </div>
                         </div>
                     )}
+
+                    {/* SETTINGS TAB */}
+                    {activeTab === 'settings' && (
+                        <div style={{ maxWidth: '500px' }}>
+                            <h3 style={styles.sectionTitle}>Profile Settings</h3>
+                            <form onSubmit={handleUpdateProfile} style={styles.card}>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <ImageUpload
+                                        label="Change Profile Photo"
+                                        onUploadSuccess={(url) => setProfileData({ ...profileData, profile_image: url })}
+                                        currentImage={profileData.profile_image || user?.imageUrl}
+                                    />
+                                </div>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={styles.label}>Full Name</label>
+                                    <input
+                                        style={styles.formInput}
+                                        value={profileData.name}
+                                        onChange={e => setProfileData({ ...profileData, name: e.target.value })}
+                                        placeholder="Your full name"
+                                    />
+                                </div>
+                                <button type="submit" style={{ ...styles.viewBtn, background: '#fff', color: '#000', border: 'none' }}>
+                                    Save Profile
+                                </button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             </div>
             {selectedBooking && <ReviewModal booking={selectedBooking} onClose={() => setSelectedBooking(null)} onSuccess={() => { fetchData(); setSelectedBooking(null); }} />}
@@ -410,6 +472,8 @@ export default function UserDashboard() {
                                 <label style={{ display: 'block', color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Weight (kg)</label>
                                 <input
                                     type="number"
+                                    id="weight"
+                                    name="weight"
                                     step="0.1"
                                     required
                                     style={styles.formInput}
@@ -421,6 +485,8 @@ export default function UserDashboard() {
                                 <label style={{ display: 'block', color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Height (cm)</label>
                                 <input
                                     type="number"
+                                    id="height"
+                                    name="height"
                                     required
                                     style={styles.formInput}
                                     value={newMetric.height}

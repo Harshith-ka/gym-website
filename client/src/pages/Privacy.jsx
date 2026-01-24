@@ -1,58 +1,84 @@
 import React from 'react';
+import { Shield, Eye, Database, Share2, Cookie, UserCheck, Mail } from 'lucide-react';
 
 export default function Privacy() {
+    const sections = [
+        {
+            icon: <Database size={20} />,
+            title: "1. Information We Collect",
+            content: "We collect information you provide directly to us, including your name, email address, phone number, and payment preferences. This data allows us to personalize your training journey and match you with the right facilities."
+        },
+        {
+            icon: <Eye size={20} />,
+            title: "2. How We Use Information",
+            content: "Your data is used to facilitate bookings, maintain your fitness progress history, and provide you with personalized gym recommendations. We analyze aggregate behavior to improve our platform's performance for all athletes."
+        },
+        {
+            icon: <Share2 size={20} />,
+            title: "3. Information Sharing",
+            content: "We never sell your personal data. We only share information with gyms and trainers you explicitly book with, ensuring they have the necessary details to provide you with a safe and effective workout."
+        },
+        {
+            icon: <Shield size={20} />,
+            title: "4. Data Security",
+            content: "We implement military-grade encryption to protect your personal and payment information. Our security protocols are regularly audited to ensure your digital safety matches your physical safety."
+        },
+        {
+            icon: <Cookie size={20} />,
+            title: "5. Cookies & Tracking",
+            content: "We use cookies to remember your preferences and keep you logged into your dashboard. This technology helps us understand which gym categories are trending and which features need optimization."
+        },
+        {
+            icon: <UserCheck size={20} />,
+            title: "6. Your Rights",
+            content: "You have complete control over your data. You can access, update, or request the deletion of your personal information at any time through your account settings or by contacting our support team."
+        }
+    ];
+
     return (
-        <div className="container" style={styles.container}>
-            <h1 style={styles.title}>Privacy Policy</h1>
-            <div className="card" style={styles.content}>
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>1. Information We Collect</h2>
-                    <p style={styles.text}>
-                        We collect information you provide directly to us, including name, email, phone number, and payment information.
-                    </p>
-                </section>
+        <div style={styles.container} className="hero-gradient">
+            <div className="container" style={styles.header}>
+                <h1 className="text-gradient" style={styles.title}>Data Protection</h1>
+                <p style={styles.subtitle}>
+                    Your privacy is the foundation of our community. Learn how we handle your information with absolute transparency.
+                </p>
+            </div>
 
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>2. How We Use Your Information</h2>
-                    <p style={styles.text}>
-                        We use the information we collect to provide, maintain, and improve our services, process bookings, and communicate with you.
-                    </p>
-                </section>
+            <div className="container" style={styles.grid}>
+                {/* Sidebar Nav */}
+                <aside style={styles.sidebar} className="support-nav-sidebar">
+                    <h4 style={styles.sidebarTitle}>Privacy Navigation</h4>
+                    {sections.map((s, i) => (
+                        <a key={i} href={`#section-${i}`} className="support-nav-item">
+                            {s.title.split('. ')[1]}
+                        </a>
+                    ))}
+                </aside>
 
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>3. Information Sharing</h2>
-                    <p style={styles.text}>
-                        We do not share your personal information with third parties except as necessary to provide our services or as required by law.
-                    </p>
-                </section>
+                {/* Content */}
+                <div style={styles.content}>
+                    {sections.map((section, index) => (
+                        <section
+                            key={index}
+                            id={`section-${index}`}
+                            className="section-glass"
+                            style={styles.section}
+                        >
+                            <div style={styles.sectionHeader}>
+                                <div style={styles.sectionIcon}>{section.icon}</div>
+                                <h2 style={styles.sectionTitle}>{section.title}</h2>
+                            </div>
+                            <p style={styles.text}>{section.content}</p>
+                        </section>
+                    ))}
 
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>4. Data Security</h2>
-                    <p style={styles.text}>
-                        We implement appropriate security measures to protect your personal information from unauthorized access and disclosure.
-                    </p>
-                </section>
-
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>5. Cookies</h2>
-                    <p style={styles.text}>
-                        We use cookies and similar tracking technologies to track activity on our service and hold certain information.
-                    </p>
-                </section>
-
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>6. Your Rights</h2>
-                    <p style={styles.text}>
-                        You have the right to access, update, or delete your personal information at any time through your account settings.
-                    </p>
-                </section>
-
-                <section style={styles.section}>
-                    <h2 style={styles.sectionTitle}>7. Contact Us</h2>
-                    <p style={styles.text}>
-                        If you have any questions about this Privacy Policy, please contact us at privacy@fitbook.com
-                    </p>
-                </section>
+                    <div style={styles.footerNote} className="section-glass">
+                        <div style={styles.contactEmail}>
+                            <Mail size={18} color="var(--primary)" />
+                            <span>Questions? Email <a href="mailto:privacy@purpulhue.com" style={{ color: 'white', fontWeight: 600 }}>privacy@purpulhue.com</a></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -60,29 +86,88 @@ export default function Privacy() {
 
 const styles = {
     container: {
-        maxWidth: '900px',
-        paddingTop: '3rem',
-        paddingBottom: '4rem',
+        paddingTop: '8rem',
+        paddingBottom: '8rem',
+        minHeight: '100vh',
+    },
+    header: {
+        textAlign: 'center',
+        marginBottom: '5rem',
+        maxWidth: '800px',
     },
     title: {
-        fontSize: '2.5rem',
+        fontSize: '3.5rem',
+        fontWeight: 800,
+        marginBottom: '1.5rem',
+        lineHeight: 1.1,
+    },
+    subtitle: {
+        fontSize: '1.1rem',
+        color: '#a1a1aa',
+        lineHeight: 1.6,
+    },
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: '250px 1fr',
+        gap: '4rem',
+        alignItems: 'start',
+    },
+    sidebar: {
+        position: 'sticky',
+        top: '120px',
+    },
+    sidebarTitle: {
+        fontSize: '0.75rem',
         fontWeight: 700,
-        marginBottom: '2rem',
-        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        color: '#71717a',
+        marginBottom: '1rem',
+        paddingLeft: '1rem',
     },
     content: {
-        padding: '3rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
     },
     section: {
-        marginBottom: '2.5rem',
+        padding: '3rem',
+    },
+    sectionHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1.25rem',
+        marginBottom: '1.5rem',
+    },
+    sectionIcon: {
+        width: '44px',
+        height: '44px',
+        borderRadius: '10px',
+        background: 'rgba(139, 92, 246, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--primary)',
     },
     sectionTitle: {
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        marginBottom: '1rem',
+        fontSize: '1.5rem',
+        fontWeight: 700,
     },
     text: {
+        fontSize: '1.05rem',
         lineHeight: 1.8,
-        color: 'var(--text-secondary)',
+        color: '#a1a1aa',
     },
+    footerNote: {
+        padding: '2.5rem',
+        textAlign: 'center',
+    },
+    contactEmail: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.75rem',
+        color: '#71717a',
+        fontSize: '1rem',
+    }
 };
