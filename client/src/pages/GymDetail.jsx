@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Star, Phone, Mail, Clock, Heart, Play, Video, ChevronRight, Check } from 'lucide-react';
+import { MapPin, Star, Phone, Mail, Clock, Heart, Play, Video, ChevronRight, Check, Share2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../services/api';
 import ReviewForm from '../components/ReviewForm';
@@ -68,6 +68,25 @@ export default function GymDetail() {
         }
     };
 
+    const handleShare = async () => {
+        const shareData = {
+            title: gym.name,
+            text: `Check out ${gym.name} - ${gym.description?.substring(0, 100) || 'Premium fitness facility'}`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        } catch (error) {
+            console.error('Share error:', error);
+        }
+    };
+
     if (loading) {
         return (
             <div style={styles.loading}>
@@ -128,6 +147,10 @@ export default function GymDetail() {
                     <button className="btn btn-outline" style={styles.actionBtn}>
                         <Heart size={20} />
                         <span className="hide-mobile">Save</span>
+                    </button>
+                    <button onClick={handleShare} className="btn btn-outline" style={styles.actionBtn}>
+                        <Share2 size={20} />
+                        <span className="hide-mobile">Share</span>
                     </button>
                 </div>
             </header>
@@ -193,7 +216,7 @@ export default function GymDetail() {
                         <div style={styles.facilitiesGrid}>
                             {gym.facilities && gym.facilities.length > 0 ? gym.facilities.map((facility, idx) => (
                                 <div key={idx} style={styles.facilityItem}>
-                                    <span className="material-symbols-outlined" style={{ color: 'var(--text-secondary)' }}>check_circle</span>
+                                    <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '20px' }}>check_circle</span>
                                     <span>{facility}</span>
                                 </div>
                             )) : (
@@ -525,6 +548,11 @@ const styles = {
         gap: '0.25rem',
     },
     dot: { color: 'var(--text-tertiary)' },
+    headerRight: {
+        display: 'flex',
+        gap: '0.75rem',
+        alignItems: 'center',
+    },
     actionBtn: {
         display: 'flex',
         gap: '0.5rem',

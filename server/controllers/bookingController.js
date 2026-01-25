@@ -60,6 +60,24 @@ export const createBooking = async (req, res) => {
             ? (pricePerUnit + trainerRate) * durationHours
             : pricePerUnit;
 
+        // Validate price if expectedAmount is provided (prevents price manipulation)
+        if (req.body.expectedAmount !== undefined) {
+            const expectedAmount = parseFloat(req.body.expectedAmount);
+            const priceDifference = Math.abs(expectedAmount - totalAmount);
+
+            // Allow small floating point differences (0.01)
+            if (priceDifference > 0.01) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    error: 'Price mismatch detected. Please refresh the page and try again.',
+                    details: {
+                        expected: expectedAmount,
+                        calculated: totalAmount
+                    }
+                });
+            }
+        }
+
         const commissionRate = commissionPercentage / 100;
         const platformCommission = totalAmount * commissionRate;
 
@@ -166,6 +184,15 @@ export const createBooking = async (req, res) => {
             amount: Math.round(totalAmount * 100), // Convert to paise
             currency: 'INR',
             receipt: `booking_${Date.now()}`,
+            payment_capture: 1,
+            notes: {
+                type: 'gym_booking',
+                gymId: gymId,
+                serviceId: serviceId,
+                userId: req.user?.id,
+                userEmail: req.user?.email,
+                userName: req.user?.name
+            }
         });
 
         // Create booking
@@ -210,6 +237,23 @@ export const verifyPayment = async (req, res) => {
     try {
         const { razorpayOrderId, razorpayPaymentId, razorpaySignature, bookingId } = req.body;
 
+        // Validate required fields
+        if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !bookingId) {
+            console.error('❌ [Payment Verify] Missing required fields:', {
+                hasOrderId: !!razorpayOrderId,
+                hasPaymentId: !!razorpayPaymentId,
+                hasSignature: !!razorpaySignature,
+                hasBookingId: !!bookingId
+            });
+            return res.status(400).json({ error: 'Missing required payment verification fields' });
+        }
+
+        // Check if RAZORPAY_KEY_SECRET is configured
+        if (!process.env.RAZORPAY_KEY_SECRET) {
+            console.error('❌ [Payment Verify] RAZORPAY_KEY_SECRET is not configured');
+            return res.status(500).json({ error: 'Payment verification configuration error' });
+        }
+
         // Verify signature
         const sign = razorpayOrderId + '|' + razorpayPaymentId;
         const expectedSign = crypto
@@ -217,22 +261,53 @@ export const verifyPayment = async (req, res) => {
             .update(sign.toString())
             .digest('hex');
 
+        console.log('🔍 [Payment Verify] Signature check:', {
+            received: razorpaySignature?.substring(0, 20) + '...',
+            expected: expectedSign?.substring(0, 20) + '...',
+            match: razorpaySignature === expectedSign
+        });
+
         if (razorpaySignature !== expectedSign) {
+            console.error('❌ [Payment Verify] Signature mismatch');
             return res.status(400).json({ error: 'Invalid payment signature' });
         }
 
+        // Check if booking exists
+        const bookingExists = await pool.query('SELECT id, payment_status FROM bookings WHERE id = $1', [bookingId]);
+        if (bookingExists.rows.length === 0) {
+            console.error('❌ [Payment Verify] Booking not found:', bookingId);
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Check if already verified
+        if (bookingExists.rows[0].payment_status === 'completed') {
+            console.log('ℹ️ [Payment Verify] Payment already verified for booking:', bookingId);
+            return res.json({ message: 'Payment already verified' });
+        }
+
         // Update booking and payment status
-        await pool.query(
+        const updateResult = await pool.query(
             `UPDATE bookings 
-       SET payment_status = 'completed', payment_id = $1
-       WHERE id = $2`,
+       SET payment_status = 'completed', payment_id = $1, status = 'confirmed'
+       WHERE id = $2
+       RETURNING id`,
             [razorpayPaymentId, bookingId]
         );
+
+        if (updateResult.rows.length === 0) {
+            console.error('❌ [Payment Verify] Failed to update booking:', bookingId);
+            return res.status(500).json({ error: 'Failed to update booking status' });
+        }
 
         // Record Transaction
         // Fetch booking to see if trainer was included
         const bookingCheck = await pool.query('SELECT trainer_id, total_amount, platform_commission, gym_earnings, trainer_earnings FROM bookings WHERE id = $1', [bookingId]);
         const booking = bookingCheck.rows[0];
+
+        if (!booking) {
+            console.error('❌ [Payment Verify] Booking data not found after update:', bookingId);
+            return res.status(500).json({ error: 'Failed to retrieve booking data' });
+        }
 
         await pool.query(
             `INSERT INTO transactions (user_id, gym_id, transaction_type, amount, platform_commission, payment_id, payment_status, metadata)
@@ -242,6 +317,7 @@ export const verifyPayment = async (req, res) => {
             [razorpayPaymentId, bookingId]
         );
 
+        console.log('✅ [Payment Verify] Payment verified successfully for booking:', bookingId);
         res.json({ message: 'Payment verified successfully' });
 
         // --- EMAIL NOTIFICATION LOGIC (Async - after response) ---
@@ -298,8 +374,30 @@ export const verifyPayment = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Verify payment error:', error);
-        res.status(500).json({ error: 'Failed to verify payment' });
+        console.error('❌ [Payment Verify] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            constraint: error.constraint,
+            detail: error.detail,
+            bookingId: req.body?.bookingId,
+            paymentId: req.body?.razorpayPaymentId
+        });
+
+        // Provide more specific error messages
+        if (error.code === '23505') { // Unique constraint violation
+            return res.status(400).json({ error: 'Payment already processed' });
+        }
+        if (error.code === '23503') { // Foreign key violation
+            return res.status(400).json({ error: 'Invalid booking reference' });
+        }
+
+        res.status(500).json({
+            error: 'Failed to verify payment',
+            details: process.env.NODE_ENV === 'production'
+                ? 'An error occurred during payment verification'
+                : error.message
+        });
     }
 };
 
@@ -310,7 +408,8 @@ export const getBookingDetails = async (req, res) => {
 
         const result = await pool.query(
             `SELECT b.*, g.name as gym_name, g.address, g.images, gs.name as service_name,
-                    u.name as trainer_name
+                    u.name as trainer_name,
+                    EXTRACT(HOUR FROM (b.end_time::time - b.start_time::time)) as duration_hours
        FROM bookings b
        JOIN gyms g ON b.gym_id = g.id
        LEFT JOIN gym_services gs ON b.service_id = gs.id

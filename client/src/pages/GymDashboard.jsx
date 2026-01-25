@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, Plus, Clock, Users, X, Check, Building2, Dumbbell, UserCheck, ScanLine, Upload, Sparkles, QrCode } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { BarChart3, Calendar, Plus, Clock, Users, X, Check, Building2, Dumbbell, UserCheck, ScanLine, Upload, Sparkles, QrCode, LocateFixed, Loader2 } from 'lucide-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../services/api';
 import ImageUpload from '../components/ImageUpload';
@@ -8,6 +8,7 @@ import MultiImageUpload from '../components/MultiImageUpload';
 
 export default function GymDashboard() {
     const { getToken } = useAuth();
+    const { user } = useUser();
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
     const [bookings, setBookings] = useState([]);
@@ -18,7 +19,7 @@ export default function GymDashboard() {
     // State for new features
     const [services, setServices] = useState([]);
     const [trainers, setTrainers] = useState([]);
-    const [gymProfile, setGymProfile] = useState(null);
+    const [gymProfile, setGymProfile] = useState({});
     const [showServiceModal, setShowServiceModal] = useState(false);
     const [showTrainerModal, setShowTrainerModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -107,6 +108,16 @@ export default function GymDashboard() {
             const token = await getToken();
             const headers = { Authorization: `Bearer ${token}` };
 
+            // Always fetch gym profile for approval status banner
+            try {
+                const profileResponse = await api.get('/admin/gym/profile', { headers });
+                if (profileResponse.data.gym) {
+                    setGymProfile(profileResponse.data.gym);
+                }
+            } catch (e) {
+                console.error('Error fetching gym profile:', e);
+            }
+
             if (activeTab === 'overview') {
                 const response = await api.get('/admin/gym/stats', { headers });
                 setStats(response.data);
@@ -116,14 +127,6 @@ export default function GymDashboard() {
             } else if (activeTab === 'slots') {
                 const response = await api.get('/admin/gym/slots', { headers });
                 setSlots(response.data.slots || []);
-            } else if (activeTab === 'profile') {
-                try {
-                    const response = await api.get('/admin/gym/stats', { headers });
-                    if (response.data.gymId) {
-                        // In a real app we would fetch the full profile here
-                        setGymProfile({ ...response.data, name: 'My Gym', description: 'Best gym in town', city: 'Mumbai', address: '123 Street' });
-                    }
-                } catch (e) { }
             } else if (activeTab === 'services') {
                 const response = await api.get('/admin/gym/services', { headers });
                 setServices(response.data.services || []);
@@ -456,8 +459,14 @@ export default function GymDashboard() {
                         fetchDashboardData(); // Refresh to show status
                     } catch (verifyError) {
                         console.error(verifyError);
-                        alert("Payment verification failed");
+                        const errorMsg = verifyError.response?.data?.error || "Payment verification failed";
+                        alert(`${errorMsg}\n\nNote: If you are using an international card, please ensure "International Payments" is enabled in your Razorpay dashboard.`);
                     }
+                },
+                prefill: {
+                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
+                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
+                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
                 theme: { color: "#ffffff" }
             };
@@ -504,6 +513,39 @@ export default function GymDashboard() {
                     </div>
                 </header>
 
+                {/* Approval Status Banner */}
+                {gymProfile && (
+                    <>
+                        {!gymProfile.is_approved && (
+                            <div style={styles.approvalBanner}>
+                                <div style={styles.bannerContent}>
+                                    <div style={styles.bannerIcon}>⏳</div>
+                                    <div>
+                                        <h3 style={styles.bannerTitle}>Pending Approval</h3>
+                                        <p style={styles.bannerText}>
+                                            Your gym is currently under review. You can set up services, trainers, and slots while waiting.
+                                            Your gym will be visible to users once approved by our team.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {gymProfile.is_approved && gymProfile.is_featured && (
+                            <div style={styles.featuredBanner}>
+                                <div style={styles.bannerContent}>
+                                    <div style={styles.bannerIcon}>⭐</div>
+                                    <div>
+                                        <h3 style={styles.bannerTitle}>Featured Gym</h3>
+                                        <p style={styles.bannerText}>
+                                            Your gym is currently featured! It will appear at the top of search results.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
                 <div className="dashboard-layout" style={styles.sidebarLayout}>
                     {/* Sidebar / Tabs */}
                     <aside className="dashboard-sidebar" style={styles.sidebar}>
@@ -549,26 +591,101 @@ export default function GymDashboard() {
 
                                 {activeTab === 'bookings' && (
                                     <div style={styles.card}>
-                                        <h2 style={styles.cardTitle}>Recent Bookings</h2>
+                                        <h2 style={styles.cardTitle}>All Bookings</h2>
                                         {bookings.length === 0 ? (
                                             <div style={styles.emptyList}>No bookings found.</div>
                                         ) : (
-                                            <div style={styles.list}>
+                                            <div style={{ display: 'grid', gap: '1rem' }}>
                                                 {bookings.map((booking) => (
-                                                    <div key={booking.id} style={styles.listItem}>
-                                                        <div>
-                                                            <div style={styles.itemTitle}>{booking.user_name}</div>
-                                                            <div style={styles.itemSubtitle}>
-                                                                {booking.service_name} • {new Date(booking.booking_date).toLocaleDateString()}
+                                                    <div key={booking.id} style={styles.bookingCard}>
+                                                        <div style={styles.bookingHeader}>
+                                                            <div>
+                                                                <div style={styles.bookingType}>
+                                                                    {booking.type === 'trainer' ? '👤 Trainer Session' : '🏋️ Gym Service'}
+                                                                </div>
+                                                                <div style={styles.bookingUser}>{booking.user_name}</div>
+                                                                <div style={styles.bookingContact}>
+                                                                    📞 {booking.user_phone || 'N/A'}
+                                                                </div>
+                                                            </div>
+                                                            <span style={{
+                                                                ...styles.badge,
+                                                                background: booking.status === 'confirmed' ? '#DCFCE7' :
+                                                                    booking.status === 'used' ? '#E0E7FF' :
+                                                                        booking.status === 'cancelled' ? '#FEE2E2' : '#FEF3C7',
+                                                                color: booking.status === 'confirmed' ? '#166534' :
+                                                                    booking.status === 'used' ? '#3730A3' :
+                                                                        booking.status === 'cancelled' ? '#991B1B' : '#92400E'
+                                                            }}>
+                                                                {booking.status.toUpperCase()}
+                                                            </span>
+                                                        </div>
+
+                                                        <div style={styles.bookingDetails}>
+                                                            <div style={styles.detailRow}>
+                                                                <span style={styles.detailLabel}>Service:</span>
+                                                                <span style={styles.detailValue}>{booking.service_name}</span>
+                                                            </div>
+
+                                                            {booking.type === 'trainer' && (
+                                                                <div style={styles.detailRow}>
+                                                                    <span style={styles.detailLabel}>Trainer:</span>
+                                                                    <span style={{ ...styles.detailValue, color: 'var(--primary)', fontWeight: 600 }}>
+                                                                        {booking.service_name}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            <div style={styles.detailRow}>
+                                                                <span style={styles.detailLabel}>Date:</span>
+                                                                <span style={styles.detailValue}>
+                                                                    {new Date(booking.booking_date).toLocaleDateString('en-US', {
+                                                                        weekday: 'short',
+                                                                        year: 'numeric',
+                                                                        month: 'short',
+                                                                        day: 'numeric'
+                                                                    })}
+                                                                </span>
+                                                            </div>
+
+                                                            {booking.start_time && (
+                                                                <div style={styles.detailRow}>
+                                                                    <span style={styles.detailLabel}>Time:</span>
+                                                                    <span style={styles.detailValue}>
+                                                                        {booking.start_time?.slice(0, 5)} - {booking.end_time?.slice(0, 5)}
+                                                                        {booking.duration_hours && ` (${booking.duration_hours}h)`}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            <div style={styles.detailRow}>
+                                                                <span style={styles.detailLabel}>Amount:</span>
+                                                                <span style={{ ...styles.detailValue, fontWeight: 700, color: '#10B981' }}>
+                                                                    ₹{booking.total_amount || booking.amount || 0}
+                                                                </span>
+                                                            </div>
+
+                                                            {booking.remaining_sessions !== null && booking.remaining_sessions !== undefined && (
+                                                                <div style={styles.detailRow}>
+                                                                    <span style={styles.detailLabel}>Sessions:</span>
+                                                                    <span style={styles.detailValue}>
+                                                                        {booking.remaining_sessions} remaining
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            <div style={styles.detailRow}>
+                                                                <span style={styles.detailLabel}>Booked:</span>
+                                                                <span style={styles.detailValue}>
+                                                                    {new Date(booking.created_at).toLocaleDateString('en-US', {
+                                                                        month: 'short',
+                                                                        day: 'numeric',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        <span style={{
-                                                            ...styles.badge,
-                                                            background: booking.status === 'confirmed' ? '#DCFCE7' : '#FEE2E2',
-                                                            color: booking.status === 'confirmed' ? '#166534' : '#991B1B'
-                                                        }}>
-                                                            {booking.status}
-                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -689,23 +806,44 @@ export default function GymDashboard() {
                                 {activeTab === 'services' && (
                                     <div style={styles.card}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                                            <h2 style={styles.cardTitle}>Services</h2>
+                                            <h2 style={styles.cardTitle}>Services & Packages</h2>
                                             <button style={styles.primaryBtn} onClick={() => setShowServiceModal(true)}>
                                                 <Plus size={18} /> Add Service
                                             </button>
                                         </div>
-                                        <div className="grid grid-2">
-                                            {services.map(service => (
-                                                <div key={service.id} style={styles.slotCard}>
-                                                    <div style={styles.slotHeader}>
-                                                        <span style={styles.itemTitle}>{service.name}</span>
-                                                        <button onClick={() => handleDeleteService(service.id)} style={styles.deleteBtn}><X size={16} /></button>
+                                        {services.length === 0 ? (
+                                            <div style={styles.emptyList}>No services added yet. Add your first service!</div>
+                                        ) : (
+                                            <div className="grid grid-3" style={{ gap: '1.5rem' }}>
+                                                {services.map(service => (
+                                                    <div key={service.id} style={styles.serviceCard}>
+                                                        <div style={styles.serviceHeader}>
+                                                            <div style={styles.serviceIcon}>
+                                                                <Dumbbell size={24} color="#8B5CF6" />
+                                                            </div>
+                                                            <button onClick={() => handleDeleteService(service.id)} style={styles.deleteBtn}>
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <h3 style={styles.serviceTitle}>{service.name}</h3>
+                                                        <p style={styles.serviceDescription}>{service.description || 'No description'}</p>
+                                                        <div style={styles.serviceFooter}>
+                                                            <div style={styles.servicePrice}>₹{service.price}</div>
+                                                            <div style={styles.serviceType}>
+                                                                {service.service_type === 'session' && '🎯 Session'}
+                                                                {service.service_type === 'pass' && '🎫 Pass'}
+                                                                {service.service_type === 'membership' && '⭐ Membership'}
+                                                            </div>
+                                                        </div>
+                                                        {service.duration_hours && (
+                                                            <div style={styles.serviceDuration}>
+                                                                <Clock size={14} /> {service.duration_hours}h duration
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <p style={{ color: '#a1a1aa', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{service.description}</p>
-                                                    <div style={styles.slotTime}>₹{service.price}</div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -1510,5 +1648,40 @@ const styles = {
         color: '#666',
         textAlign: 'center',
         padding: '2rem',
+    },
+    approvalBanner: {
+        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1))',
+        border: '1px solid rgba(251, 191, 36, 0.3)',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+        marginBottom: '2rem',
+    },
+    featuredBanner: {
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.1))',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: '1rem',
+        padding: '1.5rem',
+        marginBottom: '2rem',
+    },
+    bannerContent: {
+        display: 'flex',
+        gap: '1rem',
+        alignItems: 'flex-start',
+    },
+    bannerIcon: {
+        fontSize: '2rem',
+        lineHeight: 1,
+    },
+    bannerTitle: {
+        fontSize: '1.125rem',
+        fontWeight: 700,
+        color: 'white',
+        marginBottom: '0.5rem',
+    },
+    bannerText: {
+        fontSize: '0.875rem',
+        color: '#a1a1aa',
+        lineHeight: 1.6,
+        margin: 0,
     },
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone } from 'lucide-react';
+import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone, Star } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
 import ImageUpload from '../components/ImageUpload';
@@ -104,6 +104,21 @@ export default function AdminDashboard() {
             fetchData();
         } catch (error) {
             console.error('Error updating gym status:', error);
+        }
+    };
+
+    const handleToggleFeatured = async (gymId, currentStatus) => {
+        try {
+            const token = await getToken();
+            await api.put(
+                `/super-admin/gyms/${gymId}/featured`,
+                { isFeatured: !currentStatus },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            fetchData();
+        } catch (error) {
+            console.error('Error toggling featured status:', error);
+            alert('Failed to update featured status');
         }
     };
 
@@ -280,6 +295,7 @@ export default function AdminDashboard() {
                                             <th style={styles.th}>Owner</th>
                                             <th style={styles.th}>Location</th>
                                             <th style={styles.th}>Status</th>
+                                            <th style={styles.th}>Featured</th>
                                             <th style={styles.th}>Actions</th>
                                         </tr>
                                     </thead>
@@ -293,6 +309,7 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td style={styles.td}>{gym.city}</td>
                                                 <td style={styles.td}><span style={{ ...styles.badge, background: '#713f12', color: '#fde047' }}>Pending</span></td>
+                                                <td style={styles.td}>-</td>
                                                 <td style={styles.td}>
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                         <button onClick={() => handleGymAction(gym.id, true)} style={{ ...styles.btn, background: '#166534' }}><Check size={16} /></button>
@@ -304,7 +321,134 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
 
-                                <h3 style={{ ...styles.subTitle, marginTop: '2rem' }}>All Gyms</h3>
+                                {/* Approved Gyms Section */}
+                                <div style={{ marginTop: '3rem' }}>
+                                    <h3 style={styles.subTitle}>Approved Gyms</h3>
+                                    <table style={styles.table}>
+                                        <thead>
+                                            <tr>
+                                                <th style={styles.th}>Gym Name</th>
+                                                <th style={styles.th}>Owner</th>
+                                                <th style={styles.th}>Location</th>
+                                                <th style={styles.th}>Rating</th>
+                                                <th style={styles.th}>Featured</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {gyms.filter(g => g.is_approved).map(gym => (
+                                                <tr key={gym.id}>
+                                                    <td style={styles.td}>{gym.name}</td>
+                                                    <td style={styles.td}>
+                                                        <div>{gym.owner_name}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>{gym.owner_email}</div>
+                                                    </td>
+                                                    <td style={styles.td}>{gym.city}</td>
+                                                    <td style={styles.td}>
+                                                        <span style={{ color: '#F59E0B', fontWeight: 600 }}>
+                                                            ⭐ {gym.rating || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <button
+                                                            onClick={() => handleToggleFeatured(gym.id, gym.is_featured)}
+                                                            style={{
+                                                                ...styles.btn,
+                                                                background: gym.is_featured ? '#F59E0B' : 'transparent',
+                                                                color: gym.is_featured ? 'white' : '#a1a1aa',
+                                                                border: gym.is_featured ? 'none' : '1px solid #333',
+                                                                padding: '0.5rem 1rem',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem'
+                                                            }}
+                                                            title={gym.is_featured ? 'Remove Featured' : 'Make Featured'}
+                                                        >
+                                                            <Star size={16} fill={gym.is_featured ? 'white' : 'none'} />
+                                                            {gym.is_featured ? 'Featured' : 'Feature'}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Featured Gyms Section */}
+                                <div style={{ marginTop: '3rem' }}>
+                                    <h3 style={styles.subTitle}>🌟 Currently Featured Gyms</h3>
+                                    {gyms.filter(g => g.is_featured).length === 0 ? (
+                                        <div style={{ padding: '2rem', textAlign: 'center', color: '#666', background: '#1a1a1a', borderRadius: '0.5rem' }}>
+                                            No gyms are currently featured
+                                        </div>
+                                    ) : (
+                                        <table style={styles.table}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={styles.th}>Gym Name</th>
+                                                    <th style={styles.th}>Location</th>
+                                                    <th style={styles.th}>Featured Until</th>
+                                                    <th style={styles.th}>Days Remaining</th>
+                                                    <th style={styles.th}>Status</th>
+                                                    <th style={styles.th}>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {gyms.filter(g => g.is_featured).map(gym => {
+                                                    const featuredUntil = gym.featured_until ? new Date(gym.featured_until) : null;
+                                                    const now = new Date();
+                                                    const daysRemaining = featuredUntil ? Math.ceil((featuredUntil - now) / (1000 * 60 * 60 * 24)) : 0;
+                                                    const isExpired = featuredUntil && featuredUntil < now;
+
+                                                    return (
+                                                        <tr key={gym.id} style={{ background: isExpired ? 'rgba(239, 68, 68, 0.1)' : 'transparent' }}>
+                                                            <td style={styles.td}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                    <Star size={16} fill="#F59E0B" color="#F59E0B" />
+                                                                    {gym.name}
+                                                                </div>
+                                                            </td>
+                                                            <td style={styles.td}>{gym.city}</td>
+                                                            <td style={styles.td}>
+                                                                {featuredUntil ? featuredUntil.toLocaleDateString() : 'N/A'}
+                                                            </td>
+                                                            <td style={styles.td}>
+                                                                <span style={{
+                                                                    color: daysRemaining <= 3 ? '#EF4444' : daysRemaining <= 7 ? '#F59E0B' : '#10B981',
+                                                                    fontWeight: 600
+                                                                }}>
+                                                                    {isExpired ? 'Expired' : `${daysRemaining} days`}
+                                                                </span>
+                                                            </td>
+                                                            <td style={styles.td}>
+                                                                {isExpired ? (
+                                                                    <span style={{ color: '#EF4444', fontSize: '0.875rem' }}>⚠️ Expired</span>
+                                                                ) : daysRemaining <= 3 ? (
+                                                                    <span style={{ color: '#F59E0B', fontSize: '0.875rem' }}>⏰ Expiring Soon</span>
+                                                                ) : (
+                                                                    <span style={{ color: '#10B981', fontSize: '0.875rem' }}>✓ Active</span>
+                                                                )}
+                                                            </td>
+                                                            <td style={styles.td}>
+                                                                <button
+                                                                    onClick={() => handleToggleFeatured(gym.id, true)}
+                                                                    style={{
+                                                                        ...styles.btn,
+                                                                        background: '#EF4444',
+                                                                        color: 'white',
+                                                                        padding: '0.5rem 1rem',
+                                                                        fontSize: '0.875rem'
+                                                                    }}
+                                                                >
+                                                                    Remove Featured
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
                             </div>
                         )}
 

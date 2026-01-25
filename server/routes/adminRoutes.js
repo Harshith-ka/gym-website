@@ -1,6 +1,7 @@
 import express from 'express';
 import {
     getGymDashboardStats,
+    getGymProfile,
     getGymBookings,
     manageGymServices,
     approveGym,
@@ -21,6 +22,7 @@ const router = express.Router();
 
 // Gym owner routes
 router.get('/gym/stats', authMiddleware, requireRole('gym_owner', 'admin'), getGymDashboardStats);
+router.get('/gym/profile', authMiddleware, requireRole('gym_owner', 'admin'), getGymProfile);
 router.get('/gym/bookings', authMiddleware, requireRole('gym_owner', 'admin'), getGymBookings);
 router.post('/gym/services', authMiddleware, requireRole('gym_owner', 'admin'), manageGymServices);
 router.post('/gym/featured', authMiddleware, requireRole('gym_owner', 'admin'), createFeaturedListing);

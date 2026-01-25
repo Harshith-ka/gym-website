@@ -1,14 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, Heart } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
+import api from '../services/api';
 
-export default function GymCard({ gym }) {
-    const [isWishlisted, setIsWishlisted] = useState(false);
+export default function GymCard({ gym, initialWishlisted = false }) {
+    const { getToken, isSignedIn } = useAuth();
+    const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+    const [loading, setLoading] = useState(false);
 
-    const handleWishlist = (e) => {
+    const handleWishlist = async (e) => {
         e.preventDefault();
-        setIsWishlisted(!isWishlisted);
-        // TODO: Call API to add/remove from wishlist
+
+        if (!isSignedIn) {
+            alert('Please sign in to add gyms to your wishlist');
+            return;
+        }
+
+        if (loading) return;
+
+        try {
+            setLoading(true);
+            const token = await getToken();
+
+            if (isWishlisted) {
+                await api.delete(`/users/wishlist/${gym.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setIsWishlisted(false);
+            } else {
+                await api.post(`/users/wishlist/${gym.id}`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setIsWishlisted(true);
+            }
+        } catch (error) {
+            console.error('Wishlist error:', error);
+            alert(error.response?.data?.error || 'Failed to update wishlist');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -31,7 +62,7 @@ export default function GymCard({ gym }) {
                 </button>
                 {gym.is_featured && (
                     <span style={styles.featuredBadge}>
-                        FEATURED
+                        ⭐ FEATURED
                     </span>
                 )}
             </div>
@@ -108,13 +139,15 @@ const styles = {
         position: 'absolute',
         top: '1rem',
         left: '1rem',
-        background: 'white',
-        color: 'black',
-        padding: '0.25rem 0.75rem',
+        background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+        color: 'white',
+        padding: '0.4rem 0.75rem',
         borderRadius: '999px',
         fontSize: '0.7rem',
         fontWeight: 800,
         letterSpacing: '0.5px',
+        boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)',
+        zIndex: 2,
     },
     content: {
         padding: '1.25rem',

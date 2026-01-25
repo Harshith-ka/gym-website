@@ -19,8 +19,8 @@ router.get('/category/:category', getGymsByCategory);
 router.get('/:id', optionalAuth, maybeSyncUser, getGymDetails);
 
 // Protected routes (gym owners)
-router.post('/', authMiddleware, registerGym);
-router.put('/:id', authMiddleware, updateGym);
+router.post('/', authMiddleware, maybeSyncUser, registerGym);
+router.put('/:id', authMiddleware, maybeSyncUser, updateGym);
 
 router.get('/:id/slots', getGymSlots); // Get slots for a specific gym and date
 

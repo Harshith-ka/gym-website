@@ -350,9 +350,18 @@ export const getGymDetails = async (req, res) => {
     }
 };
 
-// Register Gym (Vendor)
+// Register a New Gym (Vendor)
 export const registerGym = async (req, res) => {
     try {
+        // Defensive check for req.user
+        if (!req.user || !req.user.id) {
+            console.error('❌ [registerGym] req.user is undefined or missing id:', req.user);
+            return res.status(401).json({
+                error: 'Authentication required. User not found in request.',
+                details: 'Please ensure you are logged in and try again.'
+            });
+        }
+
         const {
             name,
             description,
@@ -374,6 +383,8 @@ export const registerGym = async (req, res) => {
         if (!name || !address || !city || !categories || categories.length === 0) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
+
+        console.log(`📝 [registerGym] Registering gym for user ID: ${req.user.id}`);
 
         const result = await pool.query(
             `INSERT INTO gyms (

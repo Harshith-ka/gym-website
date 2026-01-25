@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
 
 export default function Booking() {
@@ -9,6 +9,7 @@ export default function Booking() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { getToken } = useAuth();
+    const { user } = useUser();
 
     const [gym, setGym] = useState(null);
     const [services, setServices] = useState([]);
@@ -110,10 +111,18 @@ export default function Booking() {
                 startTime: isSession ? (startTime || '09:00') : null,
                 endTime: isSession ? addHours(startTime || '09:00', duration) : null,
                 durationHours: isSession ? duration : null,
-                trainerId: isSession ? selectedTrainer?.id : null
+                trainerId: isSession ? selectedTrainer?.id : null,
+                expectedAmount: totalPrice // Send for validation
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            // Check if Razorpay is loaded
+            if (!window.Razorpay) {
+                alert('Payment system not loaded. Please refresh the page and try again.');
+                setProcessing(false);
+                return;
+            }
 
             // Initialize Razorpay payment
             const options = {
@@ -124,21 +133,69 @@ export default function Booking() {
                 description: `${selectedService.name} (${duration} hrs)`,
                 order_id: response.data.razorpayOrderId,
                 handler: async function (paymentResponse) {
-                    await api.post('/bookings/verify-payment', {
-                        razorpayOrderId: response.data.razorpayOrderId,
-                        razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                        razorpaySignature: paymentResponse.razorpay_signature,
-                        bookingId: response.data.booking.id,
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    navigate(`/booking-confirmation/${response.data.booking.id}`);
+                    try {
+                        console.log('🔍 [Payment] Verifying payment:', {
+                            orderId: response.data.razorpayOrderId,
+                            paymentId: paymentResponse.razorpay_payment_id,
+                            bookingId: response.data.booking.id
+                        });
+
+                        const verifyResponse = await api.post('/bookings/verify-payment', {
+                            razorpayOrderId: response.data.razorpayOrderId,
+                            razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                            razorpaySignature: paymentResponse.razorpay_signature,
+                            bookingId: response.data.booking.id,
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+
+                        console.log('✅ [Payment] Verification successful');
+                        navigate(`/booking-confirmation/${response.data.booking.id}`);
+                    } catch (error) {
+                        console.error('❌ [Payment] Verification failed:', {
+                            message: error.message,
+                            response: error.response?.data,
+                            status: error.response?.status
+                        });
+
+                        let errorMsg = 'Payment verification failed.';
+                        
+                        if (error.response?.data?.error) {
+                            errorMsg = error.response.data.error;
+                        } else if (error.response?.status === 400) {
+                            errorMsg = 'Invalid payment signature. Please contact support.';
+                        } else if (error.response?.status === 404) {
+                            errorMsg = 'Booking not found. Please contact support with your payment ID.';
+                        } else if (error.response?.status === 500) {
+                            errorMsg = 'Server error during verification. Your payment was successful. Please contact support.';
+                        }
+
+                        alert(`${errorMsg}\n\nPayment ID: ${paymentResponse.razorpay_payment_id}\n\nNote: If you are using an international card, please ensure "International Payments" is enabled in the gym's Razorpay dashboard.`);
+                        setProcessing(false);
+                    }
                 },
-                prefill: { name: '', email: '' },
+                prefill: {
+                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
+                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
+                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
+                },
                 theme: { color: '#13ec5b' },
+                modal: {
+                    ondismiss: function () {
+                        setProcessing(false);
+                    }
+                }
             };
 
             const razorpay = new window.Razorpay(options);
+
+            // Handle payment failures
+            razorpay.on('payment.failed', function (response) {
+                console.error('Payment failed:', response.error);
+                alert(`Payment failed: ${response.error.description || 'Please try again'}`);
+                setProcessing(false);
+            });
+
             razorpay.open();
         } catch (error) {
             console.error('Booking error:', error);
@@ -208,7 +265,30 @@ export default function Booking() {
                     <span style={styles.crumbActive}>Select Date & Time</span>
                 </div>
 
-                <div style={styles.grid}>
+                {/* Progress Indicator */}
+                <div style={styles.progressContainer}>
+                    <div style={styles.progressStep}>
+                        <div style={{ ...styles.progressCircle, ...styles.progressCircleActive }}>1</div>
+                        <span style={{ ...styles.progressLabel, ...styles.progressLabelActive }}>Select Service</span>
+                    </div>
+                    <div style={styles.progressLine} />
+                    <div style={styles.progressStep}>
+                        <div style={{ ...styles.progressCircle, ...styles.progressCircleActive }}>2</div>
+                        <span style={{ ...styles.progressLabel, ...styles.progressLabelActive }}>Choose Time</span>
+                    </div>
+                    <div style={styles.progressLine} />
+                    <div style={styles.progressStep}>
+                        <div style={styles.progressCircle}>3</div>
+                        <span style={styles.progressLabel}>Payment</span>
+                    </div>
+                    <div style={styles.progressLine} />
+                    <div style={styles.progressStep}>
+                        <div style={styles.progressCircle}>4</div>
+                        <span style={styles.progressLabel}>Confirmation</span>
+                    </div>
+                </div>
+
+                <div className="booking-grid" style={styles.grid}>
                     {/* Left Column: Calendar & Times */}
                     <div style={styles.leftCol}>
                         <div style={{ marginBottom: '2rem' }}>
@@ -217,7 +297,7 @@ export default function Booking() {
                         </div>
 
                         {/* Service Switcher */}
-                        <div style={styles.serviceSwitcher}>
+                        <div className="service-switcher" style={styles.serviceSwitcher}>
                             {services.map(s => (
                                 <button
                                     key={s.id}
@@ -250,7 +330,7 @@ export default function Booking() {
                             </div>
 
                             {/* Date Scroller (Horizontal) */}
-                            <div style={styles.dateScroller}>
+                            <div className="date-scroller" style={styles.dateScroller}>
                                 {dates.map((dateObj, idx) => {
                                     const { day, date, full } = formatDateDisplay(dateObj);
                                     const isSelected = bookingDate === full;
@@ -258,6 +338,16 @@ export default function Booking() {
                                         <button
                                             key={idx}
                                             onClick={() => {
+                                                // Validate not a past date
+                                                const selected = new Date(full);
+                                                const today = new Date();
+                                                today.setHours(0, 0, 0, 0);
+
+                                                if (selected < today) {
+                                                    alert('Cannot book for past dates');
+                                                    return;
+                                                }
+
                                                 setBookingDate(full);
                                                 setStartTime('');
                                             }}
@@ -431,7 +521,7 @@ export default function Booking() {
 
                     {/* Right Column: Sticky Summary */}
                     <div style={styles.rightCol}>
-                        <div style={styles.stickyWidget}>
+                        <div className="sticky-widget" style={styles.stickyWidget}>
                             <div style={styles.summaryCard}>
                                 {/* Hero Image */}
                                 <div style={styles.summaryHero}>
@@ -568,6 +658,54 @@ const styles = {
     crumbLink: { textDecoration: 'none', color: 'var(--text-secondary)' },
     crumbSep: { color: 'var(--text-tertiary)' },
     crumbActive: { fontWeight: 500, color: 'var(--text-main)' },
+
+    // Progress Indicator
+    progressContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 0',
+        marginBottom: '1rem',
+    },
+    progressStep: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
+    progressCircle: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        background: 'var(--surface)',
+        border: '2px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 700,
+        fontSize: '0.875rem',
+        color: 'var(--text-secondary)',
+    },
+    progressCircleActive: {
+        background: 'var(--primary)',
+        borderColor: 'var(--primary)',
+        color: 'black',
+    },
+    progressLabel: {
+        fontSize: '0.75rem',
+        color: 'var(--text-secondary)',
+        whiteSpace: 'nowrap',
+    },
+    progressLabelActive: {
+        color: 'var(--text-main)',
+        fontWeight: 600,
+    },
+    progressLine: {
+        width: '60px',
+        height: '2px',
+        background: 'var(--border)',
+        margin: '0 0.5rem',
+    },
 
     grid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: '2rem' }, // lg:grid-cols-12 like
     leftCol: { display: 'flex', flexDirection: 'column', gap: '2rem' },

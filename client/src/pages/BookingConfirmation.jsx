@@ -10,6 +10,7 @@ export default function BookingConfirmation() {
     const { getToken } = useAuth();
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
         fetchBooking();
@@ -42,6 +43,29 @@ export default function BookingConfirmation() {
         document.body.removeChild(downloadLink);
     };
 
+    const handleCancelBooking = async () => {
+        if (!window.confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setCancelling(true);
+            const token = await getToken();
+            await api.post(`/bookings/${id}/cancel`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Booking cancelled successfully. You will receive a refund as per our cancellation policy.');
+            // Refresh booking data to show updated status
+            await fetchBooking();
+        } catch (error) {
+            console.error('Cancellation error:', error);
+            const errorMsg = error.response?.data?.error || 'Failed to cancel booking. Please try again or contact support.';
+            alert(errorMsg);
+        } finally {
+            setCancelling(false);
+        }
+    };
+
     if (loading) {
         return (
             <div style={styles.loading}>
@@ -71,7 +95,7 @@ export default function BookingConfirmation() {
                 </p>
             </div>
 
-            <div style={styles.content}>
+            <div className="booking-confirmation-content" style={styles.content}>
                 {/* QR Code */}
                 <div className="card" style={styles.qrCard}>
                     <h2 style={styles.sectionTitle}>Your Entry Pass</h2>
@@ -231,6 +255,19 @@ export default function BookingConfirmation() {
 
             {/* Actions */}
             <div style={styles.actions}>
+                {booking.status === 'confirmed' && (
+                    <button
+                        onClick={handleCancelBooking}
+                        disabled={cancelling}
+                        style={{
+                            ...styles.cancelBtn,
+                            opacity: cancelling ? 0.6 : 1,
+                            cursor: cancelling ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+                    </button>
+                )}
                 <Link to="/dashboard" className="btn btn-secondary">
                     View All Bookings
                 </Link>
@@ -369,5 +406,16 @@ const styles = {
     error: {
         textAlign: 'center',
         padding: '4rem 0',
+    },
+    cancelBtn: {
+        padding: '0.75rem 1.5rem',
+        background: 'transparent',
+        color: '#EF4444',
+        border: '2px solid #EF4444',
+        borderRadius: 'var(--radius-lg)',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        fontSize: '1rem',
     },
 };

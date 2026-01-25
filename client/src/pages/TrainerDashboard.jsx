@@ -63,8 +63,15 @@ export default function TrainerDashboard() {
                         alert("Welcome to Premium! 🌟");
                         fetchTrainerData();
                     } catch (err) {
-                        alert("Verification failed");
+                        console.error(err);
+                        const errorMsg = err.response?.data?.error || "Verification failed";
+                        alert(`${errorMsg}\n\nNote: If you are using an international card, please ensure "International Payments" is enabled in your Razorpay dashboard.`);
                     }
+                },
+                prefill: {
+                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
+                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
+                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
                 theme: { color: "#ffffff" }
             };

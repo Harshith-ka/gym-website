@@ -81,6 +81,26 @@ body {
   font-size: 16px;
 }
 
+/* ===== MATERIAL SYMBOLS ===== */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
+
+
 /* ===== TYPOGRAPHY ===== */
 h1,
 h2,
@@ -692,6 +712,55 @@ a:hover {
     border-radius: 1.5rem !important;
   }
 
+  /* Result Flow Section */
+  .flow-row {
+    flex-direction: column !important;
+    padding: 0 1rem !important;
+    gap: 2rem !important;
+  }
+
+  .flow-step {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .flow-dashed-line {
+    display: none !important;
+  }
+
+  .result-header {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .result-big-title {
+    font-size: 3rem !important;
+  }
+
+  .result-desc {
+    font-size: 1rem !important;
+  }
+
+  /* Categories Grid */
+  .categories-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .category-card-3d {
+    height: 350px !important;
+    padding: 2rem !important;
+    border-radius: 2rem !important;
+  }
+
+  .card-title-3d {
+    font-size: 2rem !important;
+  }
+
+  .card-desc-3d {
+    max-width: 90% !important;
+  }
+
   /* Detail Pages Specifics */
   .gym-detail-header,
   .trainer-detail-header {
@@ -789,6 +858,101 @@ a:hover {
   .trainers-sidebar {
     display: none;
     /* Hide for now, can add toggle later */
+  }
+
+  /* Booking Page Responsive */
+  .booking-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sticky-widget {
+    position: static !important;
+    margin-top: 2rem;
+  }
+
+  .service-switcher {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .date-scroller {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .time-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+  }
+
+  .trainer-grid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Booking Confirmation Page */
+  .booking-confirmation-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .qr-card,
+  .details-card {
+    padding: 1.5rem !important;
+  }
+
+  /* Progress Indicator on Mobile */
+  .progress-container {
+    padding: 1rem 0 !important;
+  }
+
+  .progress-label {
+    display: none !important;
+  }
+
+  .progress-circle {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .progress-line {
+    width: 30px !important;
+  }
+}
+
+/* ===== TABLET RESPONSIVE (1024px) ===== */
+@media (max-width: 1024px) {
+
+  /* Categories Grid - 2 columns on tablet */
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Result Flow - Adjust spacing */
+  .result-big-title {
+    font-size: 4rem !important;
+  }
+
+  /* Why Choose Us Grid - Adjust layout */
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-areas:
+      "s1 s2"
+      "p p"
+      "w w" !important;
+  }
+
+  /* Coaches Section */
+  .coaches-container {
+    gap: 4rem !important;
+  }
+
+  .coaches-title {
+    font-size: 4.5rem !important;
+  }
+
+  /* Reviews Section */
+  .reviews-main-title {
+    font-size: 4.5rem !important;
   }
 }
 
@@ -1085,9 +1249,9 @@ input:checked+.toggle-switch::before {
   font-weight: 600;
 }
 
-/* ===== CONTACT PAGE ORANGE REDESIGN (DARK) ===== */
+/* ===== CONTACT PAGE PURPLE REDESIGN (DARK) ===== */
 .contact-orange-hero {
-  background: linear-gradient(135deg, #ff9d00 0%, #ff5e00 100%);
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
   position: relative;
   padding: 6rem 0 10rem;
   overflow: hidden;
@@ -1153,9 +1317,9 @@ input:checked+.toggle-switch::before {
 }
 
 .contact-card-dark .input:focus {
-  border-color: #ff5e00;
+  border-color: #8B5CF6;
   background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 4px rgba(255, 94, 0, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
   outline: none;
 }
 
@@ -1180,7 +1344,7 @@ input:checked+.toggle-switch::before {
 }
 
 .office-links a {
-  color: #ff5e00;
+  color: #8B5CF6;
   text-decoration: none;
   display: block;
   margin-top: 0.4rem;
@@ -1197,12 +1361,12 @@ input:checked+.toggle-switch::before {
 }
 
 .contact-submit-btn {
-  background: #ff5e00 !important;
+  background: #8B5CF6 !important;
   color: white !important;
   padding: 1.25rem !important;
   font-weight: 700 !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 10px 20px rgba(255, 94, 0, 0.2) !important;
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2) !important;
   border: none !important;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1211,9 +1375,9 @@ input:checked+.toggle-switch::before {
 }
 
 .contact-submit-btn:hover {
-  background: #e65500 !important;
+  background: #7c3aed !important;
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(255, 94, 0, 0.3) !important;
+  box-shadow: 0 15px 25px rgba(139, 92, 246, 0.3) !important;
 }
 
 .map-container-dark {
@@ -1628,11 +1792,12 @@ input:checked+.toggle-switch::before {
 
 /* ===== BOOKING PAGE RESPONSIVE ===== */
 @media (max-width: 1024px) {
+
   /* Stack booking layout on tablet */
   .booking-grid {
     grid-template-columns: 1fr !important;
   }
-  
+
   /* Make sticky summary not sticky on mobile */
   .booking-sticky {
     position: static !important;
@@ -1640,31 +1805,32 @@ input:checked+.toggle-switch::before {
 }
 
 @media (max-width: 768px) {
+
   /* Booking page specific */
   .booking-page-title {
     font-size: 1.75rem !important;
   }
-  
+
   .booking-service-switcher {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .booking-date-scroller {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1rem;
   }
-  
+
   .booking-time-grid {
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important;
   }
-  
+
   .booking-trainer-grid {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Summary card full width on mobile */
   .booking-summary-card {
     margin: 0 -1rem;
@@ -1674,37 +1840,38 @@ input:checked+.toggle-switch::before {
 
 /* ===== FORM PAGES RESPONSIVE ===== */
 @media (max-width: 768px) {
+
   /* Gym Registration & Forms */
   .form-container {
     padding: 1rem !important;
   }
-  
+
   .form-section {
     padding: 1.5rem 1rem !important;
   }
-  
+
   .form-grid-2 {
     grid-template-columns: 1fr !important;
   }
-  
+
   .category-chips {
     gap: 0.5rem !important;
   }
-  
+
   .category-chip {
     font-size: 0.8rem !important;
     padding: 0.5rem 0.75rem !important;
   }
-  
+
   /* Input groups */
   .input-group {
     margin-bottom: 1rem !important;
   }
-  
+
   .input-with-icon {
     padding-left: 2.5rem !important;
   }
-  
+
   /* Submit buttons full width */
   .form-submit-btn {
     width: 100% !important;
@@ -1726,7 +1893,7 @@ input:checked+.toggle-switch::before {
     border-radius: 0 !important;
     margin: 0 !important;
   }
-  
+
   .modal-content {
     height: 100%;
     overflow-y: auto;
@@ -1738,23 +1905,23 @@ input:checked+.toggle-switch::before {
   .hide-mobile {
     display: none !important;
   }
-  
+
   .show-mobile {
     display: block !important;
   }
-  
+
   .mobile-full {
     width: 100% !important;
   }
-  
+
   .mobile-stack {
     flex-direction: column !important;
   }
-  
+
   .mobile-compact {
     padding: 0.75rem !important;
   }
-  
+
   .mobile-text-sm {
     font-size: 0.875rem !important;
   }
@@ -1762,18 +1929,21 @@ input:checked+.toggle-switch::before {
 
 /* ===== TOUCH IMPROVEMENTS ===== */
 @media (hover: none) and (pointer: coarse) {
-  button, a, .clickable {
+
+  button,
+  a,
+  .clickable {
     min-height: 44px;
     min-width: 44px;
   }
-  
-  .chip, .badge {
+
+  .chip,
+  .badge {
     min-height: 36px;
     padding: 0.5rem 1rem;
   }
-  
+
   .card:hover {
     transform: none;
   }
 }
-

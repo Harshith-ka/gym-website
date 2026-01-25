@@ -5,6 +5,7 @@ import {
     manageUserStatus,
     getAllGyms,
     manageGymStatus,
+    toggleGymFeatured,
     getAllTrainers,
     manageTrainerStatus,
     getAllBookings,
@@ -41,6 +42,7 @@ router.put('/users/:userId/status', manageUserStatus);
 // Gym Management
 router.get('/gyms', getAllGyms);
 router.put('/gyms/:gymId/status', manageGymStatus);
+router.put('/gyms/:gymId/featured', toggleGymFeatured);
 
 // Trainer Management
 router.get('/trainers', getAllTrainers);

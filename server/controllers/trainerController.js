@@ -170,6 +170,14 @@ export const bookTrainer = async (req, res) => {
             amount: Math.round(totalAmount * 100),
             currency: 'INR',
             receipt: `trainer_booking_${Date.now()}`,
+            payment_capture: 1,
+            notes: {
+                type: 'trainer_booking',
+                trainerId: trainerId,
+                userId: req.user.id,
+                userName: req.user.name,
+                userEmail: req.user.email
+            }
         });
 
         // Create trainer booking

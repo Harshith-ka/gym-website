@@ -18,14 +18,26 @@ export const createFeaturedListingOrder = async (req, res) => {
 
         const amount = Math.round(dailyPrice * days * 100); // Amount in paise
 
+        // Generate short receipt ID (max 40 chars for Razorpay)
+        // GymId is a UUID, so we need to shorten it
+        const shortGymId = gymId.toString().substring(0, 8); // First 8 chars of UUID
+        const timestamp = Date.now().toString().slice(-8); // Last 8 digits
+        const receipt = `feat_${shortGymId}_${timestamp}`; // e.g., feat_4592f6de_12345678 (max 30 chars)
+
+        console.log('Generated receipt:', receipt, 'Length:', receipt.length);
+
         const options = {
             amount: amount,
             currency: "INR",
-            receipt: `featured_gym_${gymId}_${Date.now()}`,
+            receipt: receipt,
+            payment_capture: 1,
             notes: {
                 type: 'featured_listing',
                 gymId: gymId,
-                days: days
+                days: days,
+                userId: req.user?.id,
+                userEmail: req.user?.email,
+                userName: req.user?.name
             }
         };
 
@@ -136,10 +148,17 @@ export const createTrainerPremiumOrder = async (req, res) => {
         const monthlyPrice = 299; // Example price
         const amount = Math.round(monthlyPrice * months * 100);
 
+        // Generate short receipt ID (max 40 chars for Razorpay)
+        // TrainerId might be a UUID, so we need to shorten it
+        const shortTrainerId = trainerId.toString().substring(0, 8); // First 8 chars
+        const timestamp = Date.now().toString().slice(-8); // Last 8 digits
+        const receipt = `prem_${shortTrainerId}_${timestamp}`; // e.g., prem_4592f6de_12345678 (max 30 chars)
+
         const options = {
             amount,
             currency: "INR",
-            receipt: `premium_trainer_${trainerId}_${Date.now()}`,
+            receipt: receipt,
+            payment_capture: 1,
             notes: { type: 'trainer_premium', trainerId, months }
         };
 

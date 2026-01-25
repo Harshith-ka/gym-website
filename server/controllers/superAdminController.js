@@ -71,19 +71,10 @@ export const getAllGyms = async (req, res) => {
 
         if (status) {
             query += ' WHERE g.is_approved = $1';
-            // Note: is_approved is boolean in schema usually. 
-            // If schema uses boolean for is_approved (true/false), we might need to adjust logic for 'pending'.
-            // Let's assume pending means is_approved is NULL or false? 
-            // Checking adminController previously: approveGym sets matches is_approved = $1.
-            // If 'pending' concept exists, it might be is_active = false OR is_approved = false.
-            // Let's check schema.sql later. For now, assuming is_approved is boolean.
-            // Actually, if status is 'pending', we might want is_approved = false.
-            // Let's just return all and filter in frontend for now to be safe, or use boolean.
-            // Converting string 'true'/'false' to boolean.
             params.push(status === 'true');
         }
 
-        query += ' ORDER BY g.created_at DESC';
+        query += ' ORDER BY g.is_featured DESC NULLS LAST, g.created_at DESC';
 
         const result = await pool.query(query, params);
         res.json({ gyms: result.rows });
@@ -112,6 +103,31 @@ export const manageGymStatus = async (req, res) => {
     } catch (error) {
         console.error('Manage gym status error:', error);
         res.status(500).json({ error: 'Failed to update gym status' });
+    }
+};
+
+// Toggle Gym Featured Status (Promote/Unpromote)
+export const toggleGymFeatured = async (req, res) => {
+    try {
+        const { gymId } = req.params;
+        const { isFeatured } = req.body;
+
+        const result = await pool.query(
+            'UPDATE gyms SET is_featured = $1 WHERE id = $2 RETURNING id, name, is_featured',
+            [isFeatured, gymId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Gym not found' });
+        }
+
+        res.json({
+            message: `Gym ${isFeatured ? 'featured' : 'unfeatured'}`,
+            gym: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Toggle gym featured error:', error);
+        res.status(500).json({ error: 'Failed to update gym featured status' });
     }
 };
 

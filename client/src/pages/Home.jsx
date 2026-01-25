@@ -63,10 +63,12 @@ export default function Home() {
     };
 
     const nextReview = () => {
+        if (reviews.length === 0) return;
         setCurrentReview(prev => (prev + 1) % reviews.length);
     };
 
     const prevReview = () => {
+        if (reviews.length === 0) return;
         setCurrentReview(prev => (prev - 1 + reviews.length) % reviews.length);
     };
 
@@ -406,7 +408,7 @@ export default function Home() {
                             </div>
                         </div>
                         <div style={styles.reviewsContentCol}>
-                            {reviews.length > 0 ? (
+                            {reviews.length > 0 && reviews[currentReview] ? (
                                 <div style={styles.reviewCard}>
                                     <div style={styles.reviewCardHeader}>
                                         <div style={styles.reviewerName}>{reviews[currentReview].user_name}</div>
@@ -421,12 +423,24 @@ export default function Home() {
                                 </div>
                             ) : (
                                 <div style={styles.reviewCard}>
-                                    <p style={styles.reviewText}>Loading reviews...</p>
+                                    <p style={styles.reviewText}>No reviews available yet. Be the first to share your experience!</p>
                                 </div>
                             )}
                             <div style={styles.reviewsNav}>
-                                <button style={styles.navBtnActive} onClick={prevReview}><ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} /></button>
-                                <button style={styles.navBtn} onClick={nextReview}><ArrowRight size={20} /></button>
+                                <button
+                                    style={reviews.length > 0 ? styles.navBtnActive : { ...styles.navBtn, opacity: 0.5, cursor: 'not-allowed' }}
+                                    onClick={prevReview}
+                                    disabled={reviews.length === 0}
+                                >
+                                    <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                                </button>
+                                <button
+                                    style={reviews.length > 0 ? styles.navBtn : { ...styles.navBtn, opacity: 0.5, cursor: 'not-allowed' }}
+                                    onClick={nextReview}
+                                    disabled={reviews.length === 0}
+                                >
+                                    <ArrowRight size={20} />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -462,6 +476,77 @@ export default function Home() {
 
                 .categoryCard3D:hover .cardTitle3D {
                     transform: translateX(10px);
+                }
+
+                /* Mobile Responsive Styles */
+                @media (max-width: 768px) {
+                    /* Hero Section */
+                    .hero-container {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                        padding: 0 1rem !important;
+                    }
+
+                    .hero-image-wrapper {
+                        order: -1;
+                        height: 300px !important;
+                        border-radius: 1.5rem !important;
+                    }
+
+                    /* Typography Adjustments */
+                    h1 {
+                        font-size: 2.5rem !important;
+                        line-height: 1.2 !important;
+                    }
+
+                    h2 {
+                        font-size: 2rem !important;
+                        line-height: 1.3 !important;
+                    }
+
+                    /* Categories Grid */
+                    .categories-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.5rem !important;
+                    }
+
+                    /* Gallery Grid */
+                    .gallery-grid {
+                        grid-template-columns: 1fr !important;
+                        grid-template-areas: none !important;
+                        gap: 1rem !important;
+                    }
+
+                    /* Why Choose Us Grid */
+                    .why-grid {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        gap: 1.5rem !important;
+                    }
+
+                    /* Result Flow */
+                    .flow-row {
+                        flex-direction: column !important;
+                        gap: 2rem !important;
+                        padding: 0 1rem !important;
+                    }
+
+                    /* Coaches Section */
+                    .coaches-container {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                    }
+
+                    .coaches-images {
+                        flex-direction: column !important;
+                        gap: 1rem !important;
+                    }
+
+                    /* Reviews Section */
+                    .reviews-header {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                    }
                 }
             `}</style>
         </div >

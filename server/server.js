@@ -21,6 +21,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
+    exposedHeaders: ['Authorization', 'Content-Type'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-rtb-fingerprint-id', 'X-Requested-With', 'Accept', 'Origin']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,8 +46,17 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ [Server Error]:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.url,
+        method: req.method,
+        body: req.body
+    });
+    res.status(500).json({
+        error: 'Internal server error',
+        details: err.message
+    });
 });
 
 // 404 handler
@@ -53,9 +64,32 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    console.error('❌ [Unhandled Rejection]:', err);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('❌ [Uncaught Exception]:', err);
+    process.exit(1);
+});
+
+// Start server with error handling
+const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please stop the process using this port or use a different port.`);
+        console.error(`💡 To find and kill the process: netstat -ano | findstr :${PORT}`);
+        process.exit(1);
+    } else {
+        console.error('❌ Server error:', err);
+        process.exit(1);
+    }
 });
 
 export default app;

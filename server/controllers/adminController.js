@@ -34,7 +34,7 @@ export const getGymDashboardStats = async (req, res) => {
                 [gymId]
             ),
             // Earnings (Total of gym earnings from sessions and platform commission for trainers if applicable? 
-            // Actually platforms usually keep the commission. Gym owner takes trainer sessions? No, trainer earns.
+            // Actually platforms usually keep the commission. Gym owner takes trainer sessions? No, trainer earns.)
             // But for this simplified project, maybe gym owners get a cut or we just show trainer revenue if they manage them.)
             // Let's just sum gym earnings for now.
             pool.query(
@@ -57,6 +57,25 @@ export const getGymDashboardStats = async (req, res) => {
     } catch (error) {
         console.error('Get gym dashboard stats error:', error);
         res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
+};
+
+// Get Gym Profile
+export const getGymProfile = async (req, res) => {
+    try {
+        const gymResult = await pool.query(
+            'SELECT id, name, description, address, city, state, pincode, latitude, longitude, phone, email, images, videos, facilities, categories, is_approved, is_active, is_featured, created_at FROM gyms WHERE owner_id = $1',
+            [req.user.id]
+        );
+
+        if (gymResult.rows.length === 0) {
+            return res.status(404).json({ error: 'No gym found for this user' });
+        }
+
+        res.json({ gym: gymResult.rows[0] });
+    } catch (error) {
+        console.error('Get gym profile error:', error);
+        res.status(500).json({ error: 'Failed to fetch gym profile' });
     }
 };
 

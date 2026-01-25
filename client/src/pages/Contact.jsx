@@ -86,7 +86,7 @@ export default function Contact() {
                     <div className="contact-card-dark" style={styles.formCard}>
                         {submitted ? (
                             <div style={styles.success}>
-                                <div style={styles.successIcon}><Send size={48} color="#ff5e00" /></div>
+                                <div style={styles.successIcon}><Send size={48} color="#8B5CF6" /></div>
                                 <h2 style={{ color: 'white', fontSize: '2rem', fontWeight: 800 }}>Transmission Received</h2>
                                 <p style={{ color: '#a1a1aa', marginTop: '1rem' }}>An expert will coordinate with you shortly.</p>
                                 <button onClick={() => setSubmitted(false)} className="contact-submit-btn" style={{ marginTop: '2.5rem', maxWidth: '200px' }}>
@@ -285,11 +285,11 @@ const styles = {
         width: '100px',
         height: '100px',
         borderRadius: '50%',
-        background: 'rgba(255, 94, 0, 0.05)',
+        background: 'rgba(139, 92, 246, 0.05)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         margin: '0 auto 2rem',
-        border: '1px solid rgba(255, 94, 0, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.1)',
     }
 };

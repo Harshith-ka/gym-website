@@ -90,68 +90,6 @@ export const getBookingHistory = async (req, res) => {
     }
 };
 
-// Get Wishlist
-export const getWishlist = async (req, res) => {
-    try {
-        const result = await pool.query(
-            `SELECT g.*, w.created_at as added_at
-       FROM wishlist w
-       JOIN gyms g ON w.gym_id = g.id
-       WHERE w.user_id = $1
-       ORDER BY w.created_at DESC`,
-            [req.user.id]
-        );
-
-        res.json({ wishlist: result.rows });
-    } catch (error) {
-        console.error('Get wishlist error:', error);
-        res.status(500).json({ error: 'Failed to fetch wishlist' });
-    }
-};
-
-// Add to Wishlist
-export const addToWishlist = async (req, res) => {
-    try {
-        const { gymId } = req.body;
-
-        // Check if already in wishlist
-        const existing = await pool.query(
-            'SELECT id FROM wishlist WHERE user_id = $1 AND gym_id = $2',
-            [req.user.id, gymId]
-        );
-
-        if (existing.rows.length > 0) {
-            return res.status(400).json({ error: 'Gym already in wishlist' });
-        }
-
-        await pool.query(
-            'INSERT INTO wishlist (user_id, gym_id) VALUES ($1, $2)',
-            [req.user.id, gymId]
-        );
-
-        res.json({ message: 'Added to wishlist successfully' });
-    } catch (error) {
-        console.error('Add to wishlist error:', error);
-        res.status(500).json({ error: 'Failed to add to wishlist' });
-    }
-};
-
-// Remove from Wishlist
-export const removeFromWishlist = async (req, res) => {
-    try {
-        const { gymId } = req.params;
-
-        await pool.query(
-            'DELETE FROM wishlist WHERE user_id = $1 AND gym_id = $2',
-            [req.user.id, gymId]
-        );
-
-        res.json({ message: 'Removed from wishlist successfully' });
-    } catch (error) {
-        console.error('Remove from wishlist error:', error);
-        res.status(500).json({ error: 'Failed to remove from wishlist' });
-    }
-};
 // Get User Stats & Dashboard Data
 export const getUserStats = async (req, res) => {
     try {
@@ -316,3 +254,66 @@ export const recordMetrics = async (req, res) => {
         res.status(500).json({ error: 'Failed to record health metrics' });
     }
 };
+
+// Wishlist Management
+export const getWishlist = async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT g.*, 
+                    (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price
+             FROM wishlist w
+             JOIN gyms g ON w.gym_id = g.id
+             WHERE w.user_id = $1
+             ORDER BY w.created_at DESC`,
+            [req.user.id]
+        );
+
+        res.json({ wishlist: result.rows });
+    } catch (error) {
+        console.error('Get wishlist error:', error);
+        res.status(500).json({ error: 'Failed to fetch wishlist' });
+    }
+};
+
+export const addToWishlist = async (req, res) => {
+    try {
+        const { gymId } = req.params;
+
+        const existing = await pool.query(
+            'SELECT id FROM wishlist WHERE user_id = $1 AND gym_id = $2',
+            [req.user.id, gymId]
+        );
+
+        if (existing.rows.length > 0) {
+            return res.status(400).json({ error: 'Gym already in wishlist' });
+        }
+
+        await pool.query(
+            'INSERT INTO wishlist (user_id, gym_id) VALUES ($1, $2)',
+            [req.user.id, gymId]
+        );
+
+        res.status(201).json({ message: 'Added to wishlist' });
+    } catch (error) {
+        console.error('Add to wishlist error:', error);
+        res.status(500).json({ error: 'Failed to add to wishlist' });
+    }
+};
+
+export const removeFromWishlist = async (req, res) => {
+    try {
+        const { gymId } = req.params;
+
+        await pool.query(
+            'DELETE FROM wishlist WHERE user_id = $1 AND gym_id = $2',
+            [req.user.id, gymId]
+        );
+
+        res.json({ message: 'Removed from wishlist' });
+    } catch (error) {
+        console.error('Remove from wishlist error:', error);
+        res.status(500).json({ error: 'Failed to remove from wishlist' });
+    }
+};
+
+// BMI Management

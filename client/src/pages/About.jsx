@@ -93,15 +93,22 @@ export default function About() {
                         </div>
                     </div>
                     <div style={styles.storyContent}>
-                        <h2 style={styles.storyTitle}>From a Single Gym to a National Network</h2>
+                        <h2 style={styles.storyTitle}>From a Single Gym to an International Network</h2>
                         <p style={styles.storyText}>
-                            What began as a small directory for local boxing clubs has evolved into India's premier fitness ecosystem. We've spent the last 5 years building relationships with the most dedicated gym owners and trainers in the country.
+                            What began as a small directory for local boxing clubs has evolved into a premier fitness ecosystem spanning multiple countries. We've spent the last 5 years building relationships with the most dedicated gym owners and trainers across India and internationally.
                         </p>
                         <p style={styles.storyText}>
-                            Today, Purpul Hue is more than just a booking app. It's a partner in your journey—providing the tools, data, and community you need to reach your peak performance.
+                            Today, Purpul Hue is more than just a booking app. It's a global partner in your journey—providing the tools, data, and community you need to reach your peak performance, whether you're in Mumbai, London, or New York.
                         </p>
+                        <div style={styles.globalBadge}>
+                            <span style={styles.globalIcon}>🌍</span>
+                            <div>
+                                <h4 style={styles.globalTitle}>Available Internationally</h4>
+                                <p style={styles.globalText}>Serving fitness enthusiasts across India, UK, USA, and expanding globally</p>
+                            </div>
+                        </div>
                         <div style={styles.storyQuote} className="section-glass">
-                            <p>"Our goal isn't just to help you find a gym; it's to help you find your purpose through physical excellence."</p>
+                            <p>"Our goal isn't just to help you find a gym; it's to help you find your purpose through physical excellence, no matter where you are in the world."</p>
                             <span style={styles.quoteAuthor}>— Harshith, Founder of Purpul Hue</span>
                         </div>
                     </div>
@@ -374,5 +381,30 @@ const styles = {
         gap: '0.5rem',
         borderColor: 'var(--primary)',
         color: 'var(--primary)',
+    },
+    globalBadge: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1.5rem',
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: '1rem',
+        padding: '1.5rem 2rem',
+        marginTop: '2rem',
+        marginBottom: '2rem',
+    },
+    globalIcon: {
+        fontSize: '2.5rem',
+    },
+    globalTitle: {
+        fontSize: '1.1rem',
+        fontWeight: 700,
+        color: 'var(--primary)',
+        marginBottom: '0.25rem',
+    },
+    globalText: {
+        fontSize: '0.95rem',
+        color: '#a1a1aa',
+        margin: 0,
     }
 };

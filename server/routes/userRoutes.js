@@ -21,9 +21,13 @@ router.use(syncUserMiddleware);
 router.get('/profile', getUserProfile);
 router.put('/profile', updateUserProfile);
 router.get('/bookings', getBookingHistory);
+
+// Wishlist routes
 router.get('/wishlist', getWishlist);
-router.post('/wishlist', addToWishlist);
+router.post('/wishlist/:gymId', addToWishlist);
 router.delete('/wishlist/:gymId', removeFromWishlist);
+
+// Stats and metrics
 router.get('/stats', getUserStats);
 router.get('/metrics', getUserMetrics);
 router.post('/metrics', recordMetrics);

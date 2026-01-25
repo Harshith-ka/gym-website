@@ -1,7 +1,5 @@
-import { ClerkExpressRequireAuth, ClerkExpressWithAuth, Clerk } from '@clerk/clerk-sdk-node';
+import { ClerkExpressRequireAuth, ClerkExpressWithAuth, clerkClient } from '@clerk/clerk-sdk-node';
 import pool from '../config/database.js';
-
-const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
 // Valid roles in the system
 const VALID_ROLES = ['user', 'admin', 'gym_owner', 'trainer'];
@@ -46,7 +44,7 @@ export const syncUserMiddleware = async (req, res, next) => {
             let name = `${firstName || ''} ${lastName || ''}`.trim() || 'User';
 
             try {
-                const clerkUser = await clerk.users.getUser(clerkUserId);
+                const clerkUser = await clerkClient.users.getUser(clerkUserId);
                 email = email || clerkUser.emailAddresses?.[0]?.emailAddress || null;
                 phone = phone || clerkUser.phoneNumbers?.[0]?.phoneNumber || null;
                 if (!name || name === 'User') {
@@ -60,7 +58,7 @@ export const syncUserMiddleware = async (req, res, next) => {
             // Get role from Clerk's publicMetadata
             let role = 'user'; // Default role
             try {
-                const clerkUser = await clerk.users.getUser(clerkUserId);
+                const clerkUser = await clerkClient.users.getUser(clerkUserId);
                 const clerkRoleRaw = clerkUser.publicMetadata?.role;
                 console.log(`🔍 [Auth] Clerk user metadata:`, {
                     hasMetadata: !!clerkUser.publicMetadata,
@@ -76,20 +74,52 @@ export const syncUserMiddleware = async (req, res, next) => {
                 console.warn(`⚠️ [Auth] Using default role 'user'`);
             }
 
-            const insertResult = await pool.query(
-                `INSERT INTO users (clerk_id, email, phone, name, profile_image, is_verified, role)
-         VALUES ($1, $2, $3, $4, $5, true, $6)
-         RETURNING id, email, phone, name, role, profile_image`,
-                [clerkUserId, email, phone, name, imageUrl, role]
-            );
+            // Use UPSERT to handle cases where email exists but clerk_id is different
+            // This can happen if user was created before Clerk or signed up with different account
+            try {
+                const insertResult = await pool.query(
+                    `INSERT INTO users (clerk_id, email, phone, name, profile_image, is_verified, role)
+             VALUES ($1, $2, $3, $4, $5, true, $6)
+             ON CONFLICT (email) 
+             DO UPDATE SET 
+                clerk_id = EXCLUDED.clerk_id,
+                phone = COALESCE(EXCLUDED.phone, users.phone),
+                name = COALESCE(EXCLUDED.name, users.name),
+                profile_image = COALESCE(EXCLUDED.profile_image, users.profile_image),
+                is_verified = true,
+                updated_at = CURRENT_TIMESTAMP
+             RETURNING id, email, phone, name, role, profile_image`,
+                    [clerkUserId, email, phone, name, imageUrl, role]
+                );
 
-            user = insertResult.rows[0];
-            console.log(`✅ [Auth] Created new user: ${user.email} (Role: ${user.role})`);
+                user = insertResult.rows[0];
+                console.log(`✅ [Auth] Synced user: ${user.email} (Role: ${user.role})`);
+            } catch (insertError) {
+                // If UPSERT still fails, try to fetch the existing user by email
+                console.error(`⚠️ [Auth] UPSERT failed, attempting to fetch existing user:`, insertError.message);
+
+                const existingUser = await pool.query(
+                    'SELECT id, email, phone, name, role, profile_image FROM users WHERE email = $1',
+                    [email]
+                );
+
+                if (existingUser.rows.length > 0) {
+                    user = existingUser.rows[0];
+                    // Update clerk_id for this user
+                    await pool.query(
+                        'UPDATE users SET clerk_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                        [clerkUserId, user.id]
+                    );
+                    console.log(`✅ [Auth] Recovered existing user: ${user.email} (Role: ${user.role})`);
+                } else {
+                    throw insertError; // Re-throw if we can't recover
+                }
+            }
         } else {
             user = result.rows[0];
             // Sync role from Clerk if it's different
             try {
-                const clerkUser = await clerk.users.getUser(clerkUserId);
+                const clerkUser = await clerkClient.users.getUser(clerkUserId);
                 const clerkRoleRaw = clerkUser.publicMetadata?.role;
                 const clerkRole = normalizeRole(clerkRoleRaw);
                 const dbRole = normalizeRole(user.role);
@@ -98,20 +128,21 @@ export const syncUserMiddleware = async (req, res, next) => {
 
                 // Logic: DB role takes precedence if it's more "privileged" than Clerk's default 'user'
                 // This handles cases where we manually updated the DB but Clerk metadata hasn't caught up.
-                if (dbRole !== 'user' && clerkRole === 'user') {
-                    console.log(`🔄 [Auth] Upgrading Clerk metadata to match DB: ${dbRole}`);
-                    await clerk.users.updateUser(clerkUserId, {
-                        publicMetadata: { ...clerkUser.publicMetadata, role: dbRole }
-                    });
-                }
-                // Clerk role takes precedence if it's more "privileged" than DB
-                else if (clerkRole !== 'user' && dbRole === 'user') {
-                    console.log(`🔄 [Auth] Upgrading DB to match Clerk: ${clerkRole}`);
+                // If Clerk says 'admin' or 'gym_owner' but DB says 'user', Clerk wins.
+                if (dbRole === 'user' && clerkRole !== 'user') {
+                    console.log(`🔄 [Auth] Upgrading DB role from 'user' to '${clerkRole}'`);
                     await pool.query(
                         'UPDATE users SET role = $1 WHERE id = $2',
                         [clerkRole, user.id]
                     );
                     user.role = clerkRole;
+                }
+                // If DB role is more privileged than Clerk's, update Clerk's metadata
+                else if (dbRole !== 'user' && clerkRole === 'user') {
+                    console.log(`🔄 [Auth] Upgrading Clerk metadata to match DB: ${dbRole}`);
+                    await clerkClient.users.updateUser(clerkUserId, {
+                        publicMetadata: { ...clerkUser.publicMetadata, role: dbRole }
+                    });
                 }
                 // If they are both non-user but different, Clerk (Source of Truth) wins
                 else if (clerkRole !== dbRole && clerkRole !== 'user') {
@@ -132,8 +163,23 @@ export const syncUserMiddleware = async (req, res, next) => {
         console.log(`🎯 [Auth] Request User set: ID=${user.id}, Role=${user.role}`);
         next();
     } catch (error) {
-        console.error('Sync user middleware error:', error);
-        return res.status(500).json({ error: 'Failed to sync user' });
+        console.error('❌ [SyncUser] Middleware error detailed:', {
+            message: error.message,
+            stack: error.stack,
+            userId: req.auth?.userId,
+            errorType: error.constructor.name,
+            code: error.code,
+            // Database connection errors
+            ...(error.code && { dbErrorCode: error.code }),
+            // Clerk API errors
+            ...(error.statusCode && { clerkStatusCode: error.statusCode })
+        });
+        return res.status(500).json({
+            error: 'Failed to sync user',
+            details: process.env.NODE_ENV === 'production' 
+                ? 'An error occurred while syncing user data' 
+                : error.message
+        });
     }
 };
 

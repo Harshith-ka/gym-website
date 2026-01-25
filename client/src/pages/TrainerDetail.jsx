@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, Award, Calendar, Clock, MapPin, Play, CheckCircle2, ChevronLeft, ShieldCheck, Heart, Share2, Info } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import api from '../services/api';
 import ReviewForm from '../components/ReviewForm';
 
@@ -9,6 +9,7 @@ export default function TrainerDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { getToken, isSignedIn } = useAuth();
+    const { user } = useUser();
 
     const [trainer, setTrainer] = useState(null);
     const [availability, setAvailability] = useState([]);
@@ -68,17 +69,28 @@ export default function TrainerDetail() {
                 description: `${bookingData.duration} hour training session`,
                 order_id: response.data.razorpayOrderId,
                 handler: async function (paymentResponse) {
-                    await api.post('/trainers/verify-payment', {
-                        razorpayOrderId: response.data.razorpayOrderId,
-                        razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                        razorpaySignature: paymentResponse.razorpay_signature,
-                        bookingId: response.data.booking.id,
-                    }, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    try {
+                        await api.post('/trainers/verify-payment', {
+                            razorpayOrderId: response.data.razorpayOrderId,
+                            razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                            razorpaySignature: paymentResponse.razorpay_signature,
+                            bookingId: response.data.booking.id,
+                        }, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
 
-                    alert('Booking confirmed!');
-                    navigate('/dashboard');
+                        alert('Booking confirmed!');
+                        navigate('/dashboard');
+                    } catch (error) {
+                        console.error('Payment verification failed:', error);
+                        const errorMsg = error.response?.data?.error || 'Payment verification failed.';
+                        alert(`${errorMsg}\n\nNote: If you are using an international card, please ensure "International Payments" is enabled in the gym's Razorpay dashboard.`);
+                    }
+                },
+                prefill: {
+                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
+                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
+                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
                 theme: { color: '#8B5CF6' },
             };

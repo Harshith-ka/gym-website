@@ -5,18 +5,20 @@ import {
     createTrainerPremiumOrder,
     verifyTrainerPremiumPayment
 } from '../controllers/monetizationController.js';
-import { authMiddleware, requireRole } from '../middleware/auth.js';
+import { authMiddleware, syncUserMiddleware, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // protect routes - only gym owners or trainers or admins
+router.use(authMiddleware);
+router.use(syncUserMiddleware);
 
 // Featured Listing (Gym Owners)
-router.post('/featured/order', authMiddleware, createFeaturedListingOrder);
-router.post('/featured/verify', authMiddleware, verifyFeaturedListingPayment);
+router.post('/featured/order', createFeaturedListingOrder);
+router.post('/featured/verify', verifyFeaturedListingPayment);
 
 // Trainer Premium
-router.post('/trainer-premium/order', authMiddleware, createTrainerPremiumOrder); // Add stricter role check if needed
-router.post('/trainer-premium/verify', authMiddleware, verifyTrainerPremiumPayment);
+router.post('/trainer-premium/order', createTrainerPremiumOrder); // Add stricter role check if needed
+router.post('/trainer-premium/verify', verifyTrainerPremiumPayment);
 
 export default router;
