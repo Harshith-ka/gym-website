@@ -817,3 +817,67 @@ export const manageTrainerAvailability = async (req, res) => {
         client.release();
     }
 };
+// Get Gym Analytics (Revenue and Booking Trends)
+export const getGymAnalytics = async (req, res) => {
+    try {
+        const gymResult = await pool.query(
+            'SELECT id FROM gyms WHERE owner_id = $1',
+            [req.user.id]
+        );
+
+        if (gymResult.rows.length === 0) {
+            return res.status(404).json({ error: 'No gym found' });
+        }
+
+        const gymId = gymResult.rows[0].id;
+
+        const [dailyBookings, revenueGrowth] = await Promise.all([
+            // Bookings per Day of Week
+            pool.query(
+                `SELECT 
+                    CASE EXTRACT(DOW FROM booking_date)
+                        WHEN 0 THEN 'Sun'
+                        WHEN 1 THEN 'Mon'
+                        WHEN 2 THEN 'Tue'
+                        WHEN 3 THEN 'Wed'
+                        WHEN 4 THEN 'Thu'
+                        WHEN 5 THEN 'Fri'
+                        WHEN 6 THEN 'Sat'
+                    END as day,
+                    COUNT(*) as count
+                FROM (
+                    SELECT booking_date FROM bookings WHERE gym_id = $1
+                    UNION ALL
+                    SELECT booking_date FROM trainer_bookings WHERE gym_id = $1
+                ) as combined_bookings
+                GROUP BY EXTRACT(DOW FROM booking_date), day
+                ORDER BY EXTRACT(DOW FROM booking_date)`,
+                [gymId]
+            ),
+            // Revenue Growth (Last 6 Months)
+            pool.query(
+                `SELECT 
+                    TO_CHAR(booking_date, 'Mon') as name,
+                    SUM(gym_earnings) as revenue,
+                    MIN(booking_date) as sort_date
+                FROM bookings 
+                WHERE gym_id = $1 AND payment_status = 'completed'
+                AND booking_date > CURRENT_DATE - INTERVAL '6 months'
+                GROUP BY name
+                ORDER BY sort_date`,
+                [gymId]
+            )
+        ]);
+
+        res.json({
+            dailyBookings: dailyBookings.rows,
+            revenueGrowth: revenueGrowth.rows.map(row => ({
+                name: row.name,
+                revenue: parseFloat(row.revenue || 0)
+            }))
+        });
+    } catch (error) {
+        console.error('Get gym analytics error:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+};

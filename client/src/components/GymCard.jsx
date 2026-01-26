@@ -49,6 +49,7 @@ export default function GymCard({ gym, initialWishlisted = false }) {
                     src={gym.images?.[0] || 'https://via.placeholder.com/400x250?text=Gym'}
                     alt={gym.name}
                     style={styles.image}
+                    loading="lazy"
                 />
                 <button
                     onClick={handleWishlist}

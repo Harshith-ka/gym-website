@@ -22,6 +22,35 @@ export default function UserDashboard() {
     const [showMetricModal, setShowMetricModal] = useState(false);
     const [newMetric, setNewMetric] = useState({ height: '', weight: '' });
     const [profileData, setProfileData] = useState({ name: '', profile_image: '' });
+    const [quote, setQuote] = useState(null);
+
+    const nutritionQuotes = [
+        { text: "Take care of your body. It's the only place you have to live.", author: "Jim Rohn" },
+        { text: "Let food be thy medicine and medicine be thy food.", author: "Hippocrates" },
+        { text: "To eat is a necessity, but to eat intelligently is an art.", author: "François de La Rochefoucauld" },
+        { text: "A healthy outside starts from the inside.", author: "Robert Urich" },
+        { text: "Food is the most primitive form of comfort.", author: "Sheila Graham" },
+        { text: "Good food is the foundation of genuine happiness.", author: "Auguste Escoffier" },
+        { text: "Every time you eat is an opportunity to nourish your body.", author: "Unknown" },
+        { text: "Eat for the body you want, not for the body you have.", author: "Unknown" },
+        { text: "The food you eat can be either the safest and most powerful form of medicine or the slowest form of poison.", author: "Ann Wigmore" },
+        { text: "Your food choices each day affect your health — how you feel today, tomorrow, and in the future.", author: "Unknown" },
+        { text: "Nutrition is the only remedy that can bring full recovery.", author: "Isaac Jennings" },
+        { text: "The doctor of the future will no longer treat the human frame with drugs, but rather will cure and prevent disease with nutrition.", author: "Thomas Edison" },
+        { text: "Health requires healthy food.", author: "Roger Williams" },
+        { text: "Don't eat anything your great-great grandmother wouldn't recognize as food.", author: "Michael Pollan" },
+        { text: "You are what you eat, so don't be fast, cheap, easy, or fake.", author: "Unknown" },
+        { text: "Fitness is 20% exercise and 80% nutrition. You can't outrun a bad diet.", author: "Unknown" },
+        { text: "Man is what he eats.", author: "Ludwig Feuerbach" },
+        { text: "Processed foods not only weaken our bodies but also our connection to the Earth.", author: "Unknown" },
+        { text: "If you keep good food in your fridge, you will eat good food.", author: "Errick McAdams" },
+        { text: "Your body is a temple, but only if you treat it as one.", author: "Astrid Alauda" }
+    ];
+
+    useEffect(() => {
+        const randomQuote = nutritionQuotes[Math.floor(Math.random() * nutritionQuotes.length)];
+        setQuote(randomQuote);
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -144,6 +173,14 @@ export default function UserDashboard() {
                         <div>
                             <h1 style={styles.greeting}>Hello, {user?.firstName}! 👋</h1>
                             <p style={styles.joinDate}>Member since {new Date(user?.createdAt).getFullYear()}</p>
+
+                            {/* Random Nutrition Quote */}
+                            {quote && (
+                                <div style={styles.quoteBox}>
+                                    <p style={styles.quoteText}>"{quote.text}"</p>
+                                    <span style={styles.quoteAuthor}>— {quote.author}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     {/* Floating Ticket for Next Session (Desktop) */}
@@ -508,10 +545,34 @@ const styles = {
     loadingContainer: { background: '#111', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     container: { background: '#111', minHeight: '100vh', padding: '2rem 1rem', color: '#fff', fontFamily: 'var(--font-sans)' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', flexWrap: 'wrap', gap: '2rem' },
-    userInfo: { display: 'flex', alignItems: 'center', gap: '1.5rem' },
+    userInfo: { display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1, minWidth: '300px' },
     avatar: { width: '80px', height: '80px', borderRadius: '50%', border: '2px solid #333', objectFit: 'cover' },
     greeting: { fontSize: '2rem', fontWeight: 700, margin: 0, letterSpacing: '-0.5px' },
-    joinDate: { color: '#888', margin: '0.25rem 0 0 0', fontSize: '0.9rem' },
+    joinDate: { color: '#888', margin: '0.25rem 0 1rem 0', fontSize: '0.9rem' },
+
+    // Quote Styles
+    quoteBox: {
+        background: 'rgba(255, 255, 255, 0.03)',
+        borderLeft: '3px solid var(--primary, #10b981)',
+        padding: '0.75rem 1rem',
+        borderRadius: '0 8px 8px 0',
+        maxWidth: '500px',
+        marginTop: '0.5rem'
+    },
+    quoteText: {
+        margin: 0,
+        fontSize: '0.9rem',
+        fontStyle: 'italic',
+        lineHeight: 1.5,
+        color: '#d1d1d6'
+    },
+    quoteAuthor: {
+        display: 'block',
+        fontSize: '0.75rem',
+        color: '#888',
+        marginTop: '0.25rem',
+        fontWeight: 600
+    },
 
     // Ticket Widget
     ticketWidget: { background: 'linear-gradient(135deg, #27272a 0%, #1e1e20 100%)', border: '1px solid #333', borderRadius: '16px', padding: '0', display: 'flex', overflow: 'hidden', minWidth: '300px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' },

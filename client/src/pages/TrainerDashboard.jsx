@@ -73,7 +73,32 @@ export default function TrainerDashboard() {
                     ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
                     ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
-                theme: { color: "#ffffff" }
+                theme: { color: "#ffffff" },
+                retry: {
+                    enabled: true,
+                    max_count: 3
+                },
+                config: {
+                    display: {
+                        blocks: {
+                            banks: {
+                                name: 'UPI and Cards',
+                                instruments: [
+                                    {
+                                        method: 'upi'
+                                    },
+                                    {
+                                        method: 'card'
+                                    }
+                                ]
+                            }
+                        },
+                        sequence: ['block.banks'],
+                        preferences: {
+                            show_default_blocks: true
+                        }
+                    }
+                },
             };
 
             const rzp = new window.Razorpay(options);

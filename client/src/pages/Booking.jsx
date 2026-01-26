@@ -159,7 +159,7 @@ export default function Booking() {
                         });
 
                         let errorMsg = 'Payment verification failed.';
-                        
+
                         if (error.response?.data?.error) {
                             errorMsg = error.response.data.error;
                         } else if (error.response?.status === 400) {
@@ -180,6 +180,31 @@ export default function Booking() {
                     ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
                 theme: { color: '#13ec5b' },
+                retry: {
+                    enabled: true,
+                    max_count: 3
+                },
+                config: {
+                    display: {
+                        blocks: {
+                            banks: {
+                                name: 'UPI and Cards',
+                                instruments: [
+                                    {
+                                        method: 'upi'
+                                    },
+                                    {
+                                        method: 'card'
+                                    }
+                                ]
+                            }
+                        },
+                        sequence: ['block.banks'],
+                        preferences: {
+                            show_default_blocks: true
+                        }
+                    }
+                },
                 modal: {
                     ondismiss: function () {
                         setProcessing(false);

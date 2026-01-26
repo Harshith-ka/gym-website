@@ -26,6 +26,7 @@ export default function GymDashboard() {
     const [qrCode, setQrCode] = useState('');
     const [verifyResult, setVerifyResult] = useState(null);
     const [scannerActive, setScannerActive] = useState(false);
+    const [analytics, setAnalytics] = useState(null);
 
     // Trainer Availability State
     const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
@@ -133,6 +134,9 @@ export default function GymDashboard() {
             } else if (activeTab === 'trainers') {
                 const response = await api.get('/admin/gym/trainers', { headers });
                 setTrainers(response.data.trainers || []);
+            } else if (activeTab === 'analytics') {
+                const response = await api.get('/admin/gym/analytics', { headers });
+                setAnalytics(response.data);
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -468,7 +472,32 @@ export default function GymDashboard() {
                     ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
                     ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
-                theme: { color: "#ffffff" }
+                theme: { color: "#ffffff" },
+                retry: {
+                    enabled: true,
+                    max_count: 3
+                },
+                config: {
+                    display: {
+                        blocks: {
+                            banks: {
+                                name: 'UPI and Cards',
+                                instruments: [
+                                    {
+                                        method: 'upi'
+                                    },
+                                    {
+                                        method: 'card'
+                                    }
+                                ]
+                            }
+                        },
+                        sequence: ['block.banks'],
+                        preferences: {
+                            show_default_blocks: true
+                        }
+                    }
+                },
             };
 
             const rzp1 = new window.Razorpay(options);
@@ -927,6 +956,95 @@ export default function GymDashboard() {
                                         </div>
                                     </div>
                                 )}
+
+                                {activeTab === 'analytics' && (
+                                    <div style={styles.card}>
+                                        <div style={{ marginBottom: '2rem' }}>
+                                            <h2 style={styles.cardTitle}>Gym Performance Analytics 📈</h2>
+                                            <p style={{ color: '#a1a1aa' }}>Track your revenue growth and member activity.</p>
+                                        </div>
+
+                                        {!analytics ? (
+                                            <div style={styles.loading}>
+                                                <div className="spinner" />
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+                                                {/* Revenue Line Chart */}
+                                                <div style={{ background: '#111', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #333' }}>
+                                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem', color: '#888' }}>GROSS REVENUE (LAST 6 MONTHS)</h3>
+                                                    <div style={{ height: '200px', width: '100%', position: 'relative' }}>
+                                                        <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none">
+                                                            <defs>
+                                                                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.4" />
+                                                                    <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            {/* Grid Lines */}
+                                                            <line x1="0" y1="0" x2="400" y2="0" stroke="#222" strokeWidth="1" />
+                                                            <line x1="0" y1="50" x2="400" y2="50" stroke="#222" strokeWidth="1" />
+                                                            <line x1="0" y1="100" x2="400" y2="100" stroke="#222" strokeWidth="1" />
+                                                            <line x1="0" y1="150" x2="400" y2="150" stroke="#222" strokeWidth="1" />
+
+                                                            {/* Area Under Line */}
+                                                            <path
+                                                                d={`M 0 200 ${analytics.revenueGrowth.map((d, i) => `L ${(i / (analytics.revenueGrowth.length - 1)) * 400} ${200 - (d.revenue / Math.max(...analytics.revenueGrowth.map(r => r.revenue), 1000)) * 150}`).join(' ')} L 400 200 Z`}
+                                                                fill="url(#lineGrad)"
+                                                            />
+
+                                                            {/* Main Line */}
+                                                            <polyline
+                                                                fill="none"
+                                                                stroke="#10B981"
+                                                                strokeWidth="3"
+                                                                strokeLinecap="round"
+                                                                points={analytics.revenueGrowth.map((d, i) => `${(i / (analytics.revenueGrowth.length - 1)) * 400},${200 - (d.revenue / Math.max(...analytics.revenueGrowth.map(r => r.revenue), 1000)) * 150}`).join(' ')}
+                                                            />
+                                                        </svg>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                                                            {analytics.revenueGrowth.map(d => (
+                                                                <span key={d.name} style={{ fontSize: '0.75rem', color: '#555' }}>{d.name}</span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Busiest Days Bar Chart */}
+                                                <div style={{ background: '#111', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #333' }}>
+                                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem', color: '#888' }}>BUSIEST DAYS (BOOKING VOLUME)</h3>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '200px', padding: '0 1rem' }}>
+                                                        {analytics.dailyBookings.map(d => {
+                                                            const max = Math.max(...analytics.dailyBookings.map(b => b.count), 1);
+                                                            const height = (d.count / max) * 100;
+                                                            return (
+                                                                <div key={d.day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                                                                    <div style={{
+                                                                        height: `${height}%`,
+                                                                        width: '30px',
+                                                                        background: 'linear-gradient(to top, #8B5CF6, #A78BFA)',
+                                                                        borderRadius: '4px 4px 0 0',
+                                                                        minHeight: '4px'
+                                                                    }}></div>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#555', marginTop: '0.5rem' }}>{d.day}</span>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {/* Insights Summary */}
+                                                <div style={{ gridColumn: '1 / -1', background: 'rgba(139, 92, 246, 0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px dashed #8B5CF6' }}>
+                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#A78BFA', marginBottom: '0.5rem' }}>Insights</h3>
+                                                    <p style={{ color: '#a1a1aa', margin: 0 }}>
+                                                        Based on your data, <strong>{analytics.dailyBookings.sort((a, b) => b.count - a.count)[0]?.day}</strong> is your busiest day.
+                                                        Consider offering a special promotion on slower days to maximize slot utilization!
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 {activeTab === 'verify' && (
                                     <div style={{ ...styles.card, maxWidth: '600px', margin: '0 auto' }}>
                                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -1362,8 +1480,9 @@ export default function GymDashboard() {
                             </div>
                         </div>
                     </div>
-                )}
-        </div>
+                )
+            }
+        </div >
     );
 }
 

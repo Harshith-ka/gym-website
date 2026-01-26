@@ -13,7 +13,8 @@ import {
     getGymTrainers,
     verifyBooking,
     getTrainerAvailability,
-    manageTrainerAvailability
+    manageTrainerAvailability,
+    getGymAnalytics
 } from '../controllers/adminController.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -41,5 +42,6 @@ router.post('/gym/verify-booking', authMiddleware, requireRole('gym_owner', 'adm
 // Trainer Availability
 router.get('/gym/trainers/:trainerId/availability', authMiddleware, requireRole('gym_owner', 'admin'), getTrainerAvailability);
 router.post('/gym/trainers/availability', authMiddleware, requireRole('gym_owner', 'admin'), manageTrainerAvailability);
+router.get('/gym/analytics', authMiddleware, requireRole('gym_owner', 'admin'), getGymAnalytics);
 
 export default router;

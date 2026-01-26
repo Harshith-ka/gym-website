@@ -176,6 +176,8 @@ export default function Home() {
                             src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop"
                             alt="Gym Athlete"
                             style={styles.heroImage}
+                            fetchpriority="high"
+                            decoding="async"
                         />
                     </div>
                 </div>
@@ -245,23 +247,23 @@ export default function Home() {
 
                 <div className="gallery-grid" style={styles.galleryGrid}>
                     <div style={{ ...styles.galleryItem, gridArea: 'min' }}>
-                        <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800&auto=format&fit=crop" alt="Cardio" style={styles.galleryImg} />
+                        <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=600&auto=format&fit=crop" alt="Cardio" style={styles.galleryImg} loading="lazy" />
                         <div style={styles.galleryTextVertical}>Cardio</div>
                     </div>
                     <div style={{ ...styles.galleryItem, gridArea: 'nat' }}>
-                        <img src="https://images.unsplash.com/photo-1518611012118-29615638ec4a?q=80&w=800&auto=format&fit=crop" alt="Strength" style={styles.galleryImg} />
+                        <img src="https://images.unsplash.com/photo-1518611012118-29615638ec4a?q=80&w=600&auto=format&fit=crop" alt="Strength" style={styles.galleryImg} loading="lazy" />
                         <div style={styles.galleryTextHorizontalTop}>Strength</div>
                     </div>
                     <div style={{ ...styles.galleryItem, gridArea: 'art' }}>
-                        <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800&auto=format&fit=crop" alt="Mindset" style={styles.galleryImg} />
+                        <img src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=600&auto=format&fit=crop" alt="Mindset" style={styles.galleryImg} loading="lazy" />
                         <div style={styles.galleryTextCenter}>Mindset</div>
                     </div>
                     <div style={{ ...styles.galleryItem, gridArea: 'arch' }}>
-                        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop" alt="Nutrition" style={styles.galleryImg} />
+                        <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop" alt="Nutrition" style={styles.galleryImg} loading="lazy" />
                         <div style={styles.galleryTextHorizontalBottom}>Nutrition</div>
                     </div>
                     <div style={{ ...styles.galleryItem, gridArea: 'ani' }}>
-                        <img src="https://images.unsplash.com/photo-1599058917232-d750c185967c?q=80&w=800&auto=format&fit=crop" alt="Recovery" style={styles.galleryImg} />
+                        <img src="https://images.unsplash.com/photo-1599058917232-d750c185967c?q=80&w=600&auto=format&fit=crop" alt="Recovery" style={styles.galleryImg} loading="lazy" />
                         <div style={styles.galleryTextHorizontalTopRight}>Recovery</div>
                     </div>
                 </div>
@@ -373,10 +375,10 @@ export default function Home() {
                 <div className="container coaches-container" style={styles.coachesContainer}>
                     <div className="coaches-images" style={styles.coachesImages}>
                         <div style={styles.coachImageMain}>
-                            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop" alt="Coach" style={styles.coachImg} />
+                            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop" alt="Coach" style={styles.coachImg} loading="lazy" />
                         </div>
                         <div style={styles.coachImageSecondary} onClick={() => openVideo('https://www.youtube.com/embed/ysz5S6PUM-U')}>
-                            <img src="https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=800&auto=format&fit=crop" alt="Coach" style={styles.coachImg} />
+                            <img src="https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=400&auto=format&fit=crop" alt="Coach" style={styles.coachImg} loading="lazy" />
                             <div style={styles.playOverlay}><Play size={24} fill="white" /></div>
                         </div>
                     </div>

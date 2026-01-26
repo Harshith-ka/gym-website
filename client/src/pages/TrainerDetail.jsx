@@ -93,6 +93,31 @@ export default function TrainerDetail() {
                     ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
                 },
                 theme: { color: '#8B5CF6' },
+                retry: {
+                    enabled: true,
+                    max_count: 3
+                },
+                config: {
+                    display: {
+                        blocks: {
+                            banks: {
+                                name: 'UPI and Cards',
+                                instruments: [
+                                    {
+                                        method: 'upi'
+                                    },
+                                    {
+                                        method: 'card'
+                                    }
+                                ]
+                            }
+                        },
+                        sequence: ['block.banks'],
+                        preferences: {
+                            show_default_blocks: true
+                        }
+                    }
+                },
             };
 
             const razorpay = new window.Razorpay(options);
