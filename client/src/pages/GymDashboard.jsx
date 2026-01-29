@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, Calendar, Plus, Clock, Users, X, Check, Building2, Dumbbell, UserCheck, ScanLine, Upload, Sparkles, QrCode, LocateFixed, Loader2 } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../services/api';
 import ImageUpload from '../components/ImageUpload';
 import MultiImageUpload from '../components/MultiImageUpload';
 
 export default function GymDashboard() {
-    const { getToken } = useAuth();
-    const { user } = useUser();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
     const [bookings, setBookings] = useState([]);
@@ -90,6 +93,11 @@ export default function GymDashboard() {
         profileImage: '',
         introVideo: null
     });
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [searching, setSearching] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [isEditingTrainer, setIsEditingTrainer] = useState(false);
 
     // Slot form state
     const [newSlot, setNewSlot] = useState({
@@ -304,6 +312,25 @@ export default function GymDashboard() {
         }
     };
 
+    const handleSearchUsers = async (query) => {
+        if (!query || query.length < 3) {
+            setSearchResults([]);
+            return;
+        }
+        try {
+            setSearching(true);
+            const token = await getToken();
+            const response = await api.get(`/admin/gym/users/search?query=${query}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSearchResults(response.data.users || []);
+        } catch (error) {
+            console.error('Error searching users:', error);
+        } finally {
+            setSearching(false);
+        }
+    };
+
     const handleDeleteService = async (serviceId) => {
         if (!confirm('Delete this service?')) return;
         try {
@@ -318,19 +345,63 @@ export default function GymDashboard() {
         }
     };
 
+    const handleOpenAddTrainer = () => {
+        setIsEditingTrainer(false);
+        setSelectedTrainer(null);
+        setSelectedUser(null);
+        setNewTrainer({
+            user_id: '',
+            specializations: '',
+            bio: '',
+            experience_years: '',
+            certifications: '',
+            hourly_rate: '',
+        });
+        setTrainerFiles({ profileImage: '', introVideo: null });
+        setUserSearchQuery('');
+        setSearchResults([]);
+        setShowTrainerModal(true);
+    };
+
+    const handleEditTrainer = (trainer) => {
+        setIsEditingTrainer(true);
+        setSelectedTrainer(trainer);
+        setSelectedUser({ id: trainer.user_id, name: trainer.name, email: trainer.email });
+        setNewTrainer({
+            user_id: trainer.user_id,
+            specializations: trainer.specializations?.join(', ') || '',
+            bio: trainer.bio || '',
+            experience_years: trainer.experience_years || '',
+            certifications: trainer.certifications?.join(', ') || '',
+            hourly_rate: trainer.hourly_rate || '',
+        });
+        setTrainerFiles({ profileImage: trainer.profile_images?.[0] || '', introVideo: null });
+        setShowTrainerModal(true);
+    };
+
     const handleAddTrainer = async () => {
         try {
+            if (!selectedUser && !isEditingTrainer) {
+                alert('Please search and select a user first');
+                return;
+            }
+
             setLoading(true);
             const token = await getToken();
 
             const formData = new FormData();
-            formData.append('action', 'create');
+            formData.append('action', isEditingTrainer ? 'update' : 'create');
+            if (isEditingTrainer) {
+                formData.append('trainerId', selectedTrainer.id);
+            }
+
             formData.append('trainerData', JSON.stringify({
                 ...newTrainer,
-                profile_image: trainerFiles.profileImage
+                user_id: selectedUser?.id || newTrainer.user_id,
+                profileImageUrl: trainerFiles.profileImage
             }));
 
-            if (trainerFiles.introVideo) {
+            if (trainerFiles.introVideo instanceof File) {
                 formData.append('introVideo', trainerFiles.introVideo);
             }
 
@@ -342,19 +413,11 @@ export default function GymDashboard() {
             });
 
             setShowTrainerModal(false);
-            setNewTrainer({
-                name: '',
-                specializations: '',
-                bio: '',
-                experience_years: '',
-                certifications: '',
-                hourly_rate: '',
-            });
-            setTrainerFiles({ profileImage: '', introVideo: null });
             fetchDashboardData();
+            alert(isEditingTrainer ? 'Trainer updated successfully!' : 'Trainer added successfully!');
         } catch (error) {
-            console.error('Error adding trainer:', error);
-            alert('Failed to add trainer');
+            console.error('Error managing trainer:', error);
+            alert(error.response?.data?.error || 'Failed to manage trainer');
         } finally {
             setLoading(false);
         }
@@ -468,9 +531,9 @@ export default function GymDashboard() {
                     }
                 },
                 prefill: {
-                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
-                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
-                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
+                    ...(user?.displayName ? { name: user.displayName } : {}),
+                    ...(user?.email ? { email: user.email } : {}),
+                    ...(user?.phoneNumber ? { contact: user.phoneNumber } : {})
                 },
                 theme: { color: "#ffffff" },
                 retry: {
@@ -611,8 +674,8 @@ export default function GymDashboard() {
                                             icon={<Clock size={24} color="#06B6D4" />}
                                         />
                                         <StatCard
-                                            label="Total Revenue"
-                                            value={`₹${stats.totalRevenue || 0}`}
+                                            label="Total Credits Earned"
+                                            value={`${stats.totalRevenue || 0} Credits`}
                                             icon={<BarChart3 size={24} color="#10B981" />}
                                         />
                                     </div>
@@ -723,27 +786,42 @@ export default function GymDashboard() {
                                 )}
 
                                 {activeTab === 'slots' && (
-                                    <div className="grid grid-2">
-                                        {slots.map((slot) => (
-                                            <div key={slot.id} style={styles.slotCard}>
-                                                <div style={styles.slotHeader}>
-                                                    <span style={styles.slotDay}>{dayNames[slot.day_of_week]}</span>
-                                                    <button
-                                                        onClick={() => handleDeleteSlot(slot.id)}
-                                                        style={styles.deleteBtn}
-                                                    >
-                                                        <X size={16} />
-                                                    </button>
-                                                </div>
-                                                <div style={styles.slotTime}>
-                                                    {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                                                </div>
-                                                <div style={styles.slotDetails}>
-                                                    <Users size={14} /> Capacity: {slot.max_capacity}
-                                                </div>
+                                    <>
+                                        {slots.length === 0 ? (
+                                            <div style={{ ...styles.card, textAlign: 'center', padding: '4rem 2rem' }}>
+                                                <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>⏰</div>
+                                                <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>No Time Slots Configured</h3>
+                                                <p style={{ color: '#a1a1aa', marginBottom: '2rem', maxWidth: '400px', margin: '0 auto 2rem' }}>
+                                                    Add time slots to allow users to book sessions at your gym. Without slots, session-based bookings will not be available.
+                                                </p>
+                                                <button style={{ ...styles.primaryBtn, margin: '0 auto' }} onClick={() => setShowSlotModal(true)}>
+                                                    <Plus size={18} /> Create Your First Slot
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
+                                        ) : (
+                                            <div className="grid grid-2">
+                                                {slots.map((slot) => (
+                                                    <div key={slot.id} style={styles.slotCard}>
+                                                        <div style={styles.slotHeader}>
+                                                            <span style={styles.slotDay}>{dayNames[slot.day_of_week]}</span>
+                                                            <button
+                                                                onClick={() => handleDeleteSlot(slot.id)}
+                                                                style={styles.deleteBtn}
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <div style={styles.slotTime}>
+                                                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                                                        </div>
+                                                        <div style={styles.slotDetails}>
+                                                            <Users size={14} /> Capacity: {slot.max_capacity}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {activeTab === 'profile' && (
@@ -880,7 +958,9 @@ export default function GymDashboard() {
                                     <div style={styles.card}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                                             <h2 style={styles.cardTitle}>Trainers</h2>
-                                            {/* Logic to open modal for adding trainer */}
+                                            <button style={styles.primaryBtn} onClick={handleOpenAddTrainer}>
+                                                <Plus size={18} /> Add Trainer
+                                            </button>
                                         </div>
                                         {trainers.length === 0 ? (
                                             <div style={styles.emptyList}>No trainers added yet.</div>
@@ -894,22 +974,32 @@ export default function GymDashboard() {
                                                             style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 1rem' }}
                                                         />
                                                         <h3 style={styles.itemTitle}>{trainer.name}</h3>
+                                                        <p style={{ ...styles.itemSubtitle, fontSize: '0.8rem', color: '#888' }}>{trainer.email}</p>
                                                         <p style={styles.itemSubtitle}>{trainer.specializations?.join(', ')}</p>
                                                         <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
                                                             {trainer.experience_years} Years Exp • ₹{trainer.hourly_rate}/hr
                                                         </div>
+                                                        <div style={{ fontSize: '0.9rem', color: '#10b981', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                                            Total Earnings: ₹{trainer.total_credits || 0}
+                                                        </div>
                                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+                                                            <button
+                                                                onClick={() => handleEditTrainer(trainer)}
+                                                                style={{ ...styles.secondaryBtn, fontSize: '0.8rem', padding: '0.5rem 1rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa' }}
+                                                            >
+                                                                Edit
+                                                            </button>
                                                             <button
                                                                 onClick={() => handleManageAvailability(trainer)}
                                                                 style={{ ...styles.secondaryBtn, fontSize: '0.8rem', padding: '0.5rem 1rem' }}
                                                             >
-                                                                <Clock size={14} style={{ marginRight: '4px' }} /> Availability
+                                                                Availability
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteTrainer(trainer.id)}
                                                                 style={{ ...styles.deleteBtn, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem 1rem', borderRadius: '999px' }}
                                                             >
-                                                                <X size={14} /> Remove
+                                                                Remove
                                                             </button>
                                                         </div>
                                                     </div>
@@ -1389,94 +1479,140 @@ export default function GymDashboard() {
             {
                 showTrainerModal && (
                     <div style={styles.modalOverlay}>
-                        <div style={styles.modal}>
-                            <div style={styles.modalBody}>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Full Name</label>
-                                    <input
-                                        id="trainerName"
-                                        name="trainerName"
-                                        style={styles.input}
-                                        placeholder="John Doe"
-                                        value={newTrainer.name}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, name: e.target.value })}
-                                    />
-                                </div>
-                                <div style={styles.row}>
-                                    <div style={styles.formGroup}>
-                                        <label style={styles.label}>Specializations (comma separated)</label>
-                                        <input
-                                            style={styles.input}
-                                            placeholder="HIIT, Yoga, Strength"
-                                            value={newTrainer.specializations}
-                                            onChange={(e) => setNewTrainer({ ...newTrainer, specializations: e.target.value })}
-                                        />
+                        <div style={{ ...styles.modal, maxWidth: '600px' }}>
+                            <h2 style={styles.modalTitle}>{isEditingTrainer ? 'Edit Trainer Profile' : 'Add New Trainer'}</h2>
+                            <div style={{ ...styles.modalBody, maxHeight: '70vh' }}>
+                                {!isEditingTrainer && !selectedUser ? (
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ ...styles.label, marginBottom: '0.5rem' }}>Search User (Email, Phone or Name)</label>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <input
+                                                style={{ ...styles.input, flex: 1 }}
+                                                placeholder="Search for a user..."
+                                                value={userSearchQuery}
+                                                onChange={(e) => {
+                                                    setUserSearchQuery(e.target.value);
+                                                    handleSearchUsers(e.target.value);
+                                                }}
+                                            />
+                                        </div>
+                                        {searching && <div style={{ fontSize: '0.8rem', color: '#a1a1aa', marginTop: '0.5rem' }}>Searching...</div>}
+                                        {searchResults.length > 0 && (
+                                            <div style={{ border: '1px solid #333', borderRadius: '0.5rem', marginTop: '0.5rem', overflow: 'hidden' }}>
+                                                {searchResults.map(user => (
+                                                    <div
+                                                        key={user.id}
+                                                        onClick={() => setSelectedUser(user)}
+                                                        style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #333', cursor: 'pointer', background: '#27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                        onMouseOver={(e) => e.currentTarget.style.background = '#333'}
+                                                        onMouseOut={(e) => e.currentTarget.style.background = '#27272a'}
+                                                    >
+                                                        <div>
+                                                            <div style={{ fontWeight: 600 }}>{user.name}</div>
+                                                            <div style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>{user.email || user.phone}</div>
+                                                        </div>
+                                                        <div className="badge badge-outline" style={{ fontSize: '0.7rem' }}>{user.role}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {userSearchQuery.length >= 3 && !searching && searchResults.length === 0 && (
+                                            <div style={{ textAlign: 'center', padding: '1rem', color: '#666' }}>No users found. Ensure the user is registered first.</div>
+                                        )}
                                     </div>
-                                    <div style={styles.formGroup}>
-                                        <label style={styles.label}>Hourly Rate (₹)</label>
-                                        <input
-                                            type="number"
-                                            style={styles.input}
-                                            placeholder="500"
-                                            value={newTrainer.hourly_rate}
-                                            onChange={(e) => setNewTrainer({ ...newTrainer, hourly_rate: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={styles.row}>
-                                    <div style={styles.formGroup}>
-                                        <label style={styles.label}>Experience (Years)</label>
-                                        <input
-                                            type="number"
-                                            style={styles.input}
-                                            placeholder="5"
-                                            value={newTrainer.experience_years}
-                                            onChange={(e) => setNewTrainer({ ...newTrainer, experience_years: e.target.value })}
-                                        />
-                                    </div>
-                                    <div style={styles.formGroup}>
-                                        <label style={styles.label}>Certifications (comma separated)</label>
-                                        <input
-                                            style={styles.input}
-                                            placeholder="ACE, NASM"
-                                            value={newTrainer.certifications}
-                                            onChange={(e) => setNewTrainer({ ...newTrainer, certifications: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={styles.formGroup}>
-                                    <ImageUpload
-                                        label="Profile Image"
-                                        onUploadSuccess={(url) => setTrainerFiles({ ...trainerFiles, profileImage: url })}
-                                        currentImage={trainerFiles.profileImage}
-                                    />
-                                </div>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Intro Video</label>
-                                    <input
-                                        type="file"
-                                        accept="video/*"
-                                        style={styles.input}
-                                        onChange={(e) => setTrainerFiles({ ...trainerFiles, introVideo: e.target.files[0] })}
-                                    />
-                                </div>
-                                <div style={styles.formGroup}>
-                                    <label style={styles.label}>Bio</label>
-                                    <textarea
-                                        id="trainerBio"
-                                        name="trainerBio"
-                                        style={{ ...styles.input, minHeight: '80px' }}
-                                        placeholder="Tell us about the trainer..."
-                                        value={newTrainer.bio}
-                                        onChange={(e) => setNewTrainer({ ...newTrainer, bio: e.target.value })}
-                                    />
-                                </div>
+                                ) : (
+                                    <>
+                                        {/* Selected User Info */}
+                                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                            <div>
+                                                <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 600, textTransform: 'uppercase' }}>Selected Account</div>
+                                                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{selectedUser?.name}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#a1a1aa' }}>{selectedUser?.email || selectedUser?.phone}</div>
+                                            </div>
+                                            {!isEditingTrainer && (
+                                                <button onClick={() => setSelectedUser(null)} style={{ color: '#a1a1aa', border: 'none', background: 'transparent', cursor: 'pointer' }}>Change</button>
+                                            )}
+                                        </div>
+
+                                        <div style={styles.row}>
+                                            <div style={styles.formGroup}>
+                                                <label style={styles.label}>Specializations (comma separated)</label>
+                                                <input
+                                                    style={styles.input}
+                                                    placeholder="HIIT, Yoga, Strength"
+                                                    value={newTrainer.specializations}
+                                                    onChange={(e) => setNewTrainer({ ...newTrainer, specializations: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.formGroup}>
+                                                <label style={styles.label}>Hourly Rate (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    style={styles.input}
+                                                    placeholder="500"
+                                                    value={newTrainer.hourly_rate}
+                                                    onChange={(e) => setNewTrainer({ ...newTrainer, hourly_rate: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={styles.row}>
+                                            <div style={styles.formGroup}>
+                                                <label style={styles.label}>Experience (Years)</label>
+                                                <input
+                                                    type="number"
+                                                    style={styles.input}
+                                                    placeholder="5"
+                                                    value={newTrainer.experience_years}
+                                                    onChange={(e) => setNewTrainer({ ...newTrainer, experience_years: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.formGroup}>
+                                                <label style={styles.label}>Certifications (comma separated)</label>
+                                                <input
+                                                    style={styles.input}
+                                                    placeholder="ACE, NASM"
+                                                    value={newTrainer.certifications}
+                                                    onChange={(e) => setNewTrainer({ ...newTrainer, certifications: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={styles.formGroup}>
+                                            <ImageUpload
+                                                label="Profile Image"
+                                                onUploadSuccess={(url) => setTrainerFiles({ ...trainerFiles, profileImage: url })}
+                                                currentImage={trainerFiles.profileImage}
+                                            />
+                                        </div>
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>Intro Video</label>
+                                            <input
+                                                type="file"
+                                                accept="video/*"
+                                                style={styles.input}
+                                                onChange={(e) => setTrainerFiles({ ...trainerFiles, introVideo: e.target.files[0] })}
+                                            />
+                                        </div>
+                                        <div style={styles.formGroup}>
+                                            <label style={styles.label}>Bio</label>
+                                            <textarea
+                                                id="trainerBio"
+                                                name="trainerBio"
+                                                style={{ ...styles.input, minHeight: '80px' }}
+                                                placeholder="Tell us about the trainer's background, training style, etc."
+                                                value={newTrainer.bio}
+                                                onChange={(e) => setNewTrainer({ ...newTrainer, bio: e.target.value })}
+                                            />
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             <div style={styles.modalActions}>
                                 <button style={styles.secondaryBtn} onClick={() => setShowTrainerModal(false)}>Cancel</button>
-                                <button style={styles.primaryBtn} onClick={handleAddTrainer} disabled={loading}>
-                                    {loading ? 'Adding...' : 'Add Trainer'}
-                                </button>
+                                {(isEditingTrainer || selectedUser) && (
+                                    <button style={styles.primaryBtn} onClick={handleAddTrainer} disabled={loading}>
+                                        {loading ? 'Saving...' : (isEditingTrainer ? 'Update Profile' : 'Add Trainer')}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

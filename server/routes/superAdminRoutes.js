@@ -23,7 +23,8 @@ import {
     updateStaticPage,
     getAdsPerformance,
     createSponsoredAd,
-    addTrainerToGym
+    addTrainerToGym,
+    createGymAndOwner
 } from '../controllers/superAdminController.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 
@@ -75,5 +76,6 @@ router.post('/ads', createSponsoredAd);
 
 // Creation
 router.post('/trainers', addTrainerToGym);
+router.post('/gyms-with-owner', createGymAndOwner);
 
 export default router;

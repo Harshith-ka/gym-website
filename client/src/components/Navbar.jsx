@@ -1,60 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { UserButton, SignInButton, useUser, useAuth } from '@clerk/clerk-react';
-import { Sparkles, Menu, X, Heart, Home, Dumbbell, Users, Activity, Newspaper, Phone, Crown, Info } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Sparkles, Menu, X, Heart, Home, Dumbbell, Users, Activity, Newspaper, Phone, Crown, Info, LogOut, User } from 'lucide-react';
 import api from '../services/api';
 
 export default function Navbar() {
-    const { isSignedIn, user, isLoaded } = useUser();
-    const { getToken } = useAuth();
+    const { user, logout, loading } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [userRole, setUserRole] = useState(null);
     const location = useLocation();
 
-    // Fetch role from API if not in Clerk metadata
     useEffect(() => {
-        if (!isLoaded || !isSignedIn) {
+        if (loading || !user) {
             setUserRole(null);
             return;
         }
 
-        // Try to get role from Clerk metadata first
-        const clerkRole = user?.publicMetadata?.role;
-        if (clerkRole) {
-            setUserRole(clerkRole);
-            return;
-        }
-
-        // If not in metadata, fetch from API
         const fetchRole = async () => {
             try {
-                const token = await getToken();
+                const idToken = await user.getIdToken();
                 const response = await api.get('/auth/me', {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${idToken}`
                     }
                 });
                 const dbRole = response.data.user?.role || 'user';
                 setUserRole(dbRole);
             } catch (error) {
                 console.error('Error fetching user role in Navbar:', error);
-                setUserRole('user'); // Default fallback
+                setUserRole('user');
             }
         };
 
         fetchRole();
-    }, [isLoaded, isSignedIn, user, getToken]);
+    }, [loading, user]);
 
-    // Get role-based dashboard link
     const getDashboardLink = () => {
-        const role = userRole || user?.publicMetadata?.role || 'user';
+        const role = userRole || 'user';
         if (role === 'admin') return '/admin';
         if (role === 'gym_owner') return '/gym-dashboard';
+        if (role === 'trainer') return '/trainer-dashboard';
         return '/dashboard';
     };
 
-    // Handle scroll for navbar background
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
@@ -63,7 +52,6 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Close menu on route change
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location]);
@@ -87,7 +75,6 @@ export default function Navbar() {
             }}
         >
             <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* Logo */}
                 <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
                     <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '12px', display: 'flex' }}>
                         <Sparkles size={22} color="white" />
@@ -97,7 +84,6 @@ export default function Navbar() {
                     </span>
                 </Link>
 
-                {/* Desktop Links */}
                 <div className="mobile-hide" style={{ display: 'flex', gap: '2.5rem' }}>
                     {navLinks.map((link) => (
                         <Link
@@ -111,9 +97,8 @@ export default function Navbar() {
                     ))}
                 </div>
 
-                {/* Right Actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                    {isLoaded && isSignedIn ? (
+                    {!loading && user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                             <Link
                                 to={getDashboardLink()}
@@ -130,22 +115,31 @@ export default function Navbar() {
                                 <Heart size={18} color="var(--primary)" fill="var(--primary)" />
                                 <span className="mobile-hide">Dashboard</span>
                             </Link>
-                            <UserButton afterSignOutUrl="/" />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                {user.photoURL ? (
+                                    <img src={user.photoURL} alt="profile" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--primary)' }} />
+                                ) : (
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <User size={18} color="#888" />
+                                    </div>
+                                )}
+                                <button onClick={() => logout()} style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <LogOut size={18} />
+                                    <span className="mobile-hide">Logout</span>
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                            <SignInButton mode="modal" afterSignInUrl="/auth-redirect" afterSignUpUrl="/auth-redirect">
-                                <button style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
-                                    Login
-                                </button>
-                            </SignInButton>
+                            <Link to="/login" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>
+                                Login
+                            </Link>
                             <Link to="/explore" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontSize: '0.9rem' }}>
                                 Start Free Trial
                             </Link>
                         </div>
                     )}
 
-                    {/* Mobile Menu Toggle */}
                     <button
                         className="navbar-mobile-toggle"
                         style={{
@@ -163,7 +157,6 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Modern Mobile Menu Overlay */}
             {isMenuOpen && (
                 <div className="mobile-menu-overlay">
                     <button className="mobile-menu-close" onClick={() => setIsMenuOpen(false)}>
@@ -191,20 +184,23 @@ export default function Navbar() {
                     </div>
 
                     <div className="mobile-nav-footer">
-                        {isLoaded && isSignedIn ? (
-                            <Link to={getDashboardLink()} className="btn btn-primary" style={{ padding: '1.25rem', borderRadius: '16px', textAlign: 'center' }}>
-                                View My Dashboard
-                            </Link>
+                        {user ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <Link to={getDashboardLink()} className="btn btn-primary" style={{ padding: '1.25rem', borderRadius: '16px', textAlign: 'center' }}>
+                                    View My Dashboard
+                                </Link>
+                                <button onClick={() => logout()} style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.2)', color: '#ff4d4d', padding: '1.25rem', borderRadius: '16px', fontWeight: 600 }}>
+                                    Logout
+                                </button>
+                            </div>
                         ) : (
                             <>
                                 <Link to="/explore" className="btn btn-primary" style={{ padding: '1.25rem', borderRadius: '16px', textAlign: 'center' }}>
                                     Book Free Trial
                                 </Link>
-                                <SignInButton mode="modal" afterSignInUrl="/auth-redirect" afterSignUpUrl="/auth-redirect">
-                                    <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '1.25rem', borderRadius: '16px', fontWeight: 600 }}>
-                                        Member Login
-                                    </button>
-                                </SignInButton>
+                                <Link to="/login" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '1.25rem', borderRadius: '16px', fontWeight: 600, textAlign: 'center', textDecoration: 'none' }}>
+                                    Member Login
+                                </Link>
                             </>
                         )}
                     </div>

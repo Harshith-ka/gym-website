@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Download, Calendar, MapPin } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
-import { useAuth } from '@clerk/clerk-react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function BookingConfirmation() {
     const { id } = useParams();
-    const { getToken } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
@@ -100,7 +104,7 @@ export default function BookingConfirmation() {
                 <div className="card" style={styles.qrCard}>
                     <h2 style={styles.sectionTitle}>Your Entry Pass</h2>
                     <div style={{ ...styles.qrContainer, position: 'relative' }}>
-                        <QRCodeSVG
+                        <QRCodeCanvas
                             id="qr-code"
                             value={`${window.location.origin}/verify/${booking.qr_code}`}
                             size={250}

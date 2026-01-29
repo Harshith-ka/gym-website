@@ -36,7 +36,8 @@ export const searchGyms = async (req, res) => {
 
         let query = `
       SELECT DISTINCT g.*, 
-             (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price
+             (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price,
+             (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true AND service_type = 'session') as min_session_price
       FROM gyms g
       LEFT JOIN gym_services s ON g.id = s.gym_id
       LEFT JOIN gym_time_slots ts ON g.id = ts.gym_id
@@ -168,11 +169,20 @@ export const searchGyms = async (req, res) => {
                 searchExpanded = true;
             }
 
-            gyms = filteredGyms;
-            // Sort by distance (if not already sorted by fallback)
-            if (!searchExpanded) {
-                gyms.sort((a, b) => a.distance - b.distance);
-            }
+            // Sort: Featured first, then Rating, then Distance
+            gyms.sort((a, b) => {
+                // 1. Featured first
+                if (a.is_featured && !b.is_featured) return -1;
+                if (!a.is_featured && b.is_featured) return 1;
+
+                // 2. Higher rating next
+                const ratingA = parseFloat(a.rating) || 0;
+                const ratingB = parseFloat(b.rating) || 0;
+                if (ratingB !== ratingA) return ratingB - ratingA;
+
+                // 3. Finally by distance
+                return a.distance - b.distance;
+            });
 
             // Apply manual pagination if we didn't do it in SQL
             const offset = (page - 1) * limit;
@@ -197,7 +207,8 @@ export const getNearbyGyms = async (req, res) => {
 
         const result = await pool.query(
             `SELECT g.*,
-              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price
+              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price,
+              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true AND service_type = 'session') as min_session_price
        FROM gyms g
        WHERE g.is_approved = true AND g.is_active = true
          AND g.latitude IS NOT NULL AND g.longitude IS NOT NULL`
@@ -228,11 +239,16 @@ export const getNearbyGyms = async (req, res) => {
         }
 
         const gyms = filteredGyms.sort((a, b) => {
-            // Featured gyms first, then by distance (if not expanded)
-            if (!searchExpanded) {
-                if (a.is_featured && !b.is_featured) return -1;
-                if (!a.is_featured && b.is_featured) return 1;
-            }
+            // 1. Featured first (always)
+            if (a.is_featured && !b.is_featured) return -1;
+            if (!a.is_featured && b.is_featured) return 1;
+
+            // 2. Higher rating next
+            const ratingA = parseFloat(a.rating) || 0;
+            const ratingB = parseFloat(b.rating) || 0;
+            if (ratingB !== ratingA) return ratingB - ratingA;
+
+            // 3. Distance
             return a.distance - b.distance;
         });
 
@@ -250,7 +266,8 @@ export const getGymsByCategory = async (req, res) => {
 
         const result = await pool.query(
             `SELECT g.*,
-              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price
+              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true) as min_price,
+              (SELECT MIN(price) FROM gym_services WHERE gym_id = g.id AND is_active = true AND service_type = 'session') as min_session_price
        FROM gyms g
        WHERE g.is_approved = true AND g.is_active = true
          AND $1 = ANY(g.categories)

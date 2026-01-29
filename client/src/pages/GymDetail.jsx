@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { MapPin, Star, Phone, Mail, Clock, Heart, Play, Video, ChevronRight, Check, Share2 } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import ReviewForm from '../components/ReviewForm';
 import GymMap from '../components/GymMap';
+import AuthModal from '../components/AuthModal';
 
 export default function GymDetail() {
     const { id } = useParams();
-    const { getToken, isSignedIn } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
+    const isSignedIn = !!user;
     const [gym, setGym] = useState(null);
     const [services, setServices] = useState([]);
     const [trainers, setTrainers] = useState([]);
@@ -18,6 +24,9 @@ export default function GymDetail() {
     const [selectedService, setSelectedService] = useState('');
     const [ratingDistribution, setRatingDistribution] = useState({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
     const [eligibleBookingId, setEligibleBookingId] = useState(null);
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [pendingBookingUrl, setPendingBookingUrl] = useState(null);
+    const navigate = useNavigate();
 
     const categoriesList = [
         { id: 'workout', label: 'Workout / Strength Training' },
@@ -65,6 +74,23 @@ export default function GymDetail() {
             console.error('Error fetching gym details:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleBookingClick = (e, targetUrl) => {
+        e.preventDefault();
+        if (isSignedIn) {
+            navigate(targetUrl);
+        } else {
+            setPendingBookingUrl(targetUrl);
+            setShowAuthModal(true);
+        }
+    };
+
+    const handleAuthSuccess = () => {
+        if (pendingBookingUrl) {
+            navigate(pendingBookingUrl);
+            setPendingBookingUrl(null);
         }
     };
 
@@ -289,16 +315,19 @@ export default function GymDetail() {
                                             <span style={styles.planPeriod}>/ {service.duration_days ? `${service.duration_days} days` : 'session'}</span>
                                         </div>
                                     </div>
-                                    <Link
-                                        to={`/booking/${gym.id}?service=${service.id}`}
+                                    <button
+                                        onClick={(e) => handleBookingClick(e, `/booking/${gym.id}?service=${service.id}`)}
                                         style={{
                                             ...styles.planBtn,
                                             background: service.name.toLowerCase().includes('pack') ? 'var(--primary)' : 'var(--background-light)',
                                             color: service.name.toLowerCase().includes('pack') ? 'var(--text-main)' : 'var(--primary)',
+                                            border: 'none',
+                                            width: '100%',
+                                            cursor: 'pointer'
                                         }}
                                     >
                                         Select
-                                    </Link>
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -460,13 +489,13 @@ export default function GymDetail() {
                                 ))}
                             </div>
 
-                            <Link
-                                to={`/booking/${gym.id}?service=${selectedService}`}
+                            <button
+                                onClick={(e) => handleBookingClick(e, `/booking/${gym.id}?service=${selectedService}`)}
                                 className="btn btn-primary"
-                                style={styles.bookBtn}
+                                style={{ ...styles.bookBtn, border: 'none', cursor: 'pointer', width: '100%' }}
                             >
                                 Continue to Booking <ChevronRight size={18} />
-                            </Link>
+                            </button>
                             <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
                                 Secure Checkout • Instant Access
                             </p>
@@ -485,6 +514,12 @@ export default function GymDetail() {
                     </div>
                 </div>
             </div>
+
+            <AuthModal
+                isOpen={showAuthModal}
+                onClose={() => setShowAuthModal(false)}
+                onSuccess={handleAuthSuccess}
+            />
         </div>
     );
 }

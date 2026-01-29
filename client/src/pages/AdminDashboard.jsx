@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone, Star } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { BarChart3, Users, Building2, Calendar, DollarSign, Settings, Bell, Search, Filter, MoreVertical, X, Check, Lock, Unlock, TrendingUp, Clock, Send, Globe, Layout, FileText, Megaphone, Star, PlusCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import MultiImageUpload from '../components/MultiImageUpload';
 import ImageUpload from '../components/ImageUpload';
 
 export default function AdminDashboard() {
-    const { getToken } = useAuth();
-    const { user } = useUser();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
@@ -27,6 +31,20 @@ export default function AdminDashboard() {
     });
     const [bannerFormData, setBannerFormData] = useState({
         image_url: '', title: '', subtitle: '', link_url: ''
+    });
+    const [gymFormData, setGymFormData] = useState({
+        ownerName: '',
+        ownerEmail: '',
+        gymName: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        phone: '',
+        email: '',
+        categories: [],
+        images: [],
+        amountPerSession: ''
     });
 
     useEffect(() => {
@@ -49,8 +67,14 @@ export default function AdminDashboard() {
                 const res = await api.get('/super-admin/gyms', { headers });
                 setGyms(res.data.gyms);
             } else if (activeTab === 'trainers') {
-                const res = await api.get('/super-admin/trainers', { headers });
-                setTrainers(res.data.trainers);
+                const [trainerRes, userRes, gymRes] = await Promise.all([
+                    api.get('/super-admin/trainers', { headers }),
+                    api.get('/super-admin/users', { headers }),
+                    api.get('/super-admin/gyms', { headers })
+                ]);
+                setTrainers(trainerRes.data.trainers);
+                setUsers(userRes.data.users);
+                setGyms(gymRes.data.gyms);
             } else if (activeTab === 'bookings') {
                 const res = await api.get('/super-admin/bookings', { headers });
                 setBookings(res.data.bookings);
@@ -86,7 +110,7 @@ export default function AdminDashboard() {
     };
 
     const handleUserAction = async (userId, isActive) => {
-        if (!confirm(`Are you sure you want to ${isActive ? 'block' : 'unblock'} this user?`)) return;
+        if (!confirm(`Are you sure you want to ${isActive ? 'block' : 'unblock'} this user ? `)) return;
         try {
             const token = await getToken();
             await api.put(`/super-admin/users/${userId}/status`, { isActive: !isActive }, { headers: { Authorization: `Bearer ${token}` } });
@@ -137,6 +161,30 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleCreateGym = async (e) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            const token = await getToken();
+            await api.post('/super-admin/gyms-with-owner', gymFormData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Gym and Owner created successfully!');
+            setGymFormData({
+                ownerName: '', ownerEmail: '', gymName: '', address: '', city: '',
+                state: '', pincode: '', phone: '', email: '', categories: [],
+                images: [], amountPerSession: ''
+            });
+            setActiveTab('gyms');
+            fetchData();
+        } catch (error) {
+            console.error('Error creating gym:', error);
+            alert('Failed to create gym: ' + (error.response?.data?.error || error.message));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const TabButton = ({ id, label, icon: Icon }) => (
         <button
             onClick={() => setActiveTab(id)}
@@ -156,6 +204,7 @@ export default function AdminDashboard() {
                     <TabButton id="overview" label="Overview" icon={BarChart3} />
                     <TabButton id="users" label="Users" icon={Users} />
                     <TabButton id="gyms" label="Gyms" icon={Building2} />
+                    <TabButton id="create-gym" label="Add Gym" icon={PlusCircle} />
                     <TabButton id="trainers" label="Trainers" icon={Users} />
                     <TabButton id="bookings" label="Bookings" icon={Calendar} />
                     <TabButton id="financials" label="Financials" icon={DollarSign} />
@@ -166,9 +215,9 @@ export default function AdminDashboard() {
                     <TabButton id="settings" label="Settings" icon={Settings} />
                 </div>
                 <div style={styles.userSection}>
-                    <img src={user?.imageUrl} alt="Profile" style={styles.profileImg} />
+                    <img src={user?.photoURL} alt="Profile" style={styles.profileImg} />
                     <div>
-                        <div style={styles.userName}>{user?.fullName}</div>
+                        <div style={styles.userName}>{user?.displayName || 'Admin'}</div>
                         <div style={styles.userRole}>Super Admin</div>
                     </div>
                 </div>
@@ -631,6 +680,130 @@ export default function AdminDashboard() {
                                     <input id="ad-start" name="start_date" type="date" style={styles.input} required />
                                     <input id="ad-end" name="end_date" type="date" style={styles.input} required />
                                     <button type="submit" style={{ gridColumn: 'span 2', ...styles.btn, width: 'auto', background: '#8B5CF6' }}>Create Ad</button>
+                                </form>
+                            </div>
+                        )}
+
+                        {activeTab === 'create-gym' && (
+                            <div style={styles.card}>
+                                <h3 style={styles.subTitle}>Register New Gym & Owner</h3>
+                                <form onSubmit={handleCreateGym} style={{ ...styles.form, marginTop: '2rem' }}>
+                                    <div style={{ borderBottom: '1px solid #333', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                                        <h4 style={{ color: '#8B5CF6', marginBottom: '1rem' }}>Owner Information</h4>
+                                        <div style={styles.grid2}>
+                                            <div style={styles.inputGroup}>
+                                                <label>Full Name</label>
+                                                <input
+                                                    style={styles.input}
+                                                    required
+                                                    value={gymFormData.ownerName}
+                                                    onChange={e => setGymFormData({ ...gymFormData, ownerName: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label>Email Address</label>
+                                                <input
+                                                    type="email"
+                                                    style={styles.input}
+                                                    required
+                                                    value={gymFormData.ownerEmail}
+                                                    onChange={e => setGymFormData({ ...gymFormData, ownerEmail: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ paddingBottom: '1rem' }}>
+                                        <h4 style={{ color: '#8B5CF6', marginBottom: '1rem' }}>Gym Details</h4>
+                                        <div style={styles.grid2}>
+                                            <div style={styles.inputGroup}>
+                                                <label>Gym Name</label>
+                                                <input
+                                                    style={styles.input}
+                                                    required
+                                                    value={gymFormData.gymName}
+                                                    onChange={e => setGymFormData({ ...gymFormData, gymName: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label>Contact Phone</label>
+                                                <input
+                                                    style={styles.input}
+                                                    value={gymFormData.phone}
+                                                    onChange={e => setGymFormData({ ...gymFormData, phone: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={{ ...styles.inputGroup, marginTop: '1rem' }}>
+                                            <label>Full Address</label>
+                                            <textarea
+                                                style={{ ...styles.input, height: '80px' }}
+                                                required
+                                                value={gymFormData.address}
+                                                onChange={e => setGymFormData({ ...gymFormData, address: e.target.value })}
+                                            />
+                                        </div>
+                                        <div style={{ ...styles.grid3, marginTop: '1rem' }}>
+                                            <div style={styles.inputGroup}>
+                                                <label>City</label>
+                                                <input
+                                                    style={styles.input}
+                                                    required
+                                                    value={gymFormData.city}
+                                                    onChange={e => setGymFormData({ ...gymFormData, city: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label>State</label>
+                                                <input
+                                                    style={styles.input}
+                                                    value={gymFormData.state}
+                                                    onChange={e => setGymFormData({ ...gymFormData, state: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label>Pincode</label>
+                                                <input
+                                                    style={styles.input}
+                                                    value={gymFormData.pincode}
+                                                    onChange={e => setGymFormData({ ...gymFormData, pincode: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={{ ...styles.grid2, marginTop: '1rem' }}>
+                                            <div style={styles.inputGroup}>
+                                                <label>Categories (comma separated)</label>
+                                                <input
+                                                    style={styles.input}
+                                                    placeholder="workout, yoga, zumba"
+                                                    value={gymFormData.categories.join(', ')}
+                                                    onChange={e => setGymFormData({ ...gymFormData, categories: e.target.value.split(',').map(c => c.trim()).filter(Boolean) })}
+                                                />
+                                            </div>
+                                            <div style={styles.inputGroup}>
+                                                <label>Amount per Session (₹)</label>
+                                                <input
+                                                    type="number"
+                                                    style={styles.input}
+                                                    placeholder="500"
+                                                    value={gymFormData.amountPerSession}
+                                                    onChange={e => setGymFormData({ ...gymFormData, amountPerSession: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={{ ...styles.inputGroup, marginTop: '1rem' }}>
+                                            <MultiImageUpload
+                                                label="Gym Photos"
+                                                currentImages={gymFormData.images}
+                                                onImagesChange={(images) => setGymFormData({ ...gymFormData, images })}
+                                                maxImages={5}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" style={{ ...styles.btn, background: '#8B5CF6', padding: '1rem', width: '100%', fontSize: '1rem' }}>
+                                        Create Gym & Account
+                                    </button>
                                 </form>
                             </div>
                         )}

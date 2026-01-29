@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon, Plus } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function MultiImageUpload({ onImagesChange, currentImages = [], label = "Upload Images", maxImages = 5 }) {
-    const { getToken } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [images, setImages] = useState(currentImages);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);

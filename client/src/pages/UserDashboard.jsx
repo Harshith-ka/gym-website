@@ -4,14 +4,17 @@ import {
     Calendar, Heart, ArrowRight, Clock, MapPin, Star,
     Flame, Trophy, Activity, Dumbbell, Settings, Plus, X
 } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import ReviewModal from '../components/ReviewModal';
 import ImageUpload from '../components/ImageUpload';
 
 export default function UserDashboard() {
-    const { getToken } = useAuth();
-    const { user } = useUser();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [activeTab, setActiveTab] = useState('overview');
     const [stats, setStats] = useState(null);
     const [bookings, setBookings] = useState([]);
@@ -166,13 +169,13 @@ export default function UserDashboard() {
                 <header className="dashboard-header user-dashboard-header" style={styles.header}>
                     <div className="user-info" style={styles.userInfo}>
                         <img
-                            src={profileData.profile_image || user?.imageUrl}
+                            src={profileData.profile_image || user?.photoURL}
                             alt="Profile"
                             style={styles.avatar}
                         />
                         <div>
-                            <h1 style={styles.greeting}>Hello, {user?.firstName}! 👋</h1>
-                            <p style={styles.joinDate}>Member since {new Date(user?.createdAt).getFullYear()}</p>
+                            <h1 style={styles.greeting}>Hello, {user?.displayName || 'User'}! 👋</h1>
+                            <p style={styles.joinDate}>Member since {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).getFullYear() : '2024'}</p>
 
                             {/* Random Nutrition Quote */}
                             {quote && (

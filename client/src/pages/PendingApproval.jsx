@@ -1,10 +1,9 @@
 import React from 'react';
 import { Clock, CheckCircle, ShieldCheck } from 'lucide-react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function PendingApproval() {
-    const { user } = useUser();
-    const { signOut } = useAuth();
+    const { user, logout } = useAuth();
 
     return (
         <div style={styles.container}>
@@ -14,7 +13,7 @@ export default function PendingApproval() {
                 </div>
                 <h1 style={styles.title}>Registration Pending</h1>
                 <p style={styles.text}>
-                    Hi <strong>{user?.fullName || 'Gym Owner'}</strong>, your gym registration is currently being reviewed by our Super Admin.
+                    Hi <strong>{user?.displayName || 'Gym Owner'}</strong>, your gym registration is currently being reviewed by our Super Admin.
                 </p>
                 <div style={styles.steps}>
                     <div style={styles.step}>
@@ -33,7 +32,7 @@ export default function PendingApproval() {
                 <p style={styles.note}>
                     You will receive an email once your gym is approved. Usually, this takes 24-48 hours.
                 </p>
-                <button onClick={() => signOut()} style={styles.btn}>Sign Out</button>
+                <button onClick={() => logout()} style={styles.btn}>Sign Out</button>
             </div>
         </div>
     );

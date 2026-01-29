@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function ReviewForm({ gymId, trainerId, bookingId, trainerBookingId, onSuccess }) {
-    const { getToken } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [rating, setRating] = useState(0);
     const [hoveredRating, setHoveredRating] = useState(0);
     const [comment, setComment] = useState('');

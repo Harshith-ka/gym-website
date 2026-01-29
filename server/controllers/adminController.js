@@ -458,7 +458,12 @@ export const getGymTrainers = async (req, res) => {
         const gymId = gymResult.rows[0].id;
 
         const result = await pool.query(
-            'SELECT * FROM trainers WHERE gym_id = $1 ORDER BY created_at DESC',
+            `SELECT t.*, u.name, u.email, u.phone,
+                    (SELECT COALESCE(SUM(total_amount), 0) FROM trainer_bookings WHERE trainer_id = t.id AND payment_status = 'completed') as total_credits
+             FROM trainers t 
+             JOIN users u ON t.user_id = u.id 
+             WHERE t.gym_id = $1 
+             ORDER BY t.created_at DESC`,
             [gymId]
         );
 
@@ -493,10 +498,12 @@ export const manageTrainers = async (req, res) => {
         const gymId = gymResult.rows[0].id;
 
         if (action === 'create') {
-            const { name, specializations, bio, experience_years, certifications, hourly_rate } = trainerData;
+            const { user_id, specializations, bio, experience_years, certifications, hourly_rate } = trainerData;
 
-            let profileImageUrl = trainerData.profileImageUrl; // Fallback if no file
-            let introVideoUrl = trainerData.introVideoUrl; // Fallback if no file
+            if (!user_id) return res.status(400).json({ error: 'User ID is required' });
+
+            let profileImageUrl = trainerData.profileImageUrl;
+            let introVideoUrl = trainerData.introVideoUrl;
 
             // Handle Cloudinary uploads
             if (req.files) {
@@ -530,26 +537,30 @@ export const manageTrainers = async (req, res) => {
             }
 
             const result = await pool.query(
-                `INSERT INTO trainers (gym_id, name, specializations, bio, profile_image, experience_years, certifications, hourly_rate, intro_video)
+                `INSERT INTO trainers (gym_id, user_id, specializations, bio, profile_images, experience_years, certifications, hourly_rate, intro_video)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                  RETURNING *`,
                 [
                     gymId,
-                    name,
+                    user_id,
                     Array.isArray(specializations) ? specializations : (specializations ? specializations.split(',').map(s => s.trim()) : []),
                     bio,
-                    profileImageUrl,
+                    profileImageUrl ? [profileImageUrl] : [],
                     experience_years || 0,
                     Array.isArray(certifications) ? certifications : (certifications ? certifications.split(',').map(c => c.trim()) : []),
                     hourly_rate || 0,
                     introVideoUrl
                 ]
             );
+
+            // Update user role
+            await pool.query("UPDATE users SET role = 'trainer' WHERE id = $1 AND role = 'user'", [user_id]);
+
             return res.status(201).json({ message: 'Trainer added', trainer: result.rows[0] });
         }
 
         if (action === 'update') {
-            const { name, specializations, bio, experience_years, certifications, hourly_rate } = trainerData;
+            const { specializations, bio, experience_years, certifications, hourly_rate } = trainerData;
 
             let profileImageUrl = trainerData.profileImageUrl;
             let introVideoUrl = trainerData.introVideoUrl;
@@ -587,18 +598,16 @@ export const manageTrainers = async (req, res) => {
 
             const result = await pool.query(
                 `UPDATE trainers SET
-                  name = COALESCE($1, name),
-                  specializations = COALESCE($2, specializations),
-                  bio = COALESCE($3, bio),
-                  profile_image = COALESCE($4, profile_image),
-                  experience_years = COALESCE($5, experience_years),
-                  certifications = COALESCE($6, certifications),
-                  hourly_rate = COALESCE($7, hourly_rate),
-                  intro_video = COALESCE($8, intro_video)
-                  WHERE id = $9 AND gym_id = $10
+                  specializations = COALESCE($1, specializations),
+                  bio = COALESCE($2, bio),
+                  profile_images = CASE WHEN $3::text IS NOT NULL THEN ARRAY[$3] ELSE profile_images END,
+                  experience_years = COALESCE($4, experience_years),
+                  certifications = COALESCE($5, certifications),
+                  hourly_rate = COALESCE($6, hourly_rate),
+                  intro_video = COALESCE($7, intro_video)
+                  WHERE id = $8 AND gym_id = $9
                   RETURNING *`,
                 [
-                    name,
                     specializations ? (Array.isArray(specializations) ? specializations : specializations.split(',').map(s => s.trim())) : null,
                     bio,
                     profileImageUrl,
@@ -879,5 +888,29 @@ export const getGymAnalytics = async (req, res) => {
     } catch (error) {
         console.error('Get gym analytics error:', error);
         res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+};
+
+// Search Users for Gym Owners (to assign as trainers)
+export const searchUsers = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query || query.length < 3) {
+            return res.status(400).json({ error: 'Search query must be at least 3 characters' });
+        }
+
+        const result = await pool.query(
+            `SELECT id, name, email, phone, role 
+             FROM users 
+             WHERE (email ILIKE $1 OR phone ILIKE $1 OR name ILIKE $1)
+             AND role != 'admin'
+             LIMIT 10`,
+            [`%${query}%`]
+        );
+
+        res.json({ users: result.rows });
+    } catch (error) {
+        console.error('Search users error:', error);
+        res.status(500).json({ error: 'Failed to search users' });
     }
 };

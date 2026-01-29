@@ -3,6 +3,7 @@ import {
     getTrainers,
     getTrainerDetails,
     getTrainerProfile,
+    updateTrainerProfile,
     bookTrainer,
     verifyTrainerPayment,
 } from '../controllers/trainerController.js';
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Protected routes (Must come before /:id if matching)
 router.get('/me', authMiddleware, getTrainerProfile);
+router.put('/profile', authMiddleware, updateTrainerProfile);
 
 // Public routes
 router.get('/', getTrainers);

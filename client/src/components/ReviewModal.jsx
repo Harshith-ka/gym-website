@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { X, Star, Loader2 } from 'lucide-react';
 import api from '../services/api';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function ReviewModal({ booking, onClose, onSuccess }) {
-    const { getToken } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);

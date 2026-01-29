@@ -1,10 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Check, Loader2, Image as ImageIcon } from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function ImageUpload({ onUploadSuccess, currentImage, label = "Upload Image", folder = "general" }) {
-    const { getToken } = useAuth();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
     const [preview, setPreview] = useState(currentImage || null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);

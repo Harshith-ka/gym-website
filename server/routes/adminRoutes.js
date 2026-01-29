@@ -14,7 +14,8 @@ import {
     verifyBooking,
     getTrainerAvailability,
     manageTrainerAvailability,
-    getGymAnalytics
+    getGymAnalytics,
+    searchUsers
 } from '../controllers/adminController.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -27,6 +28,7 @@ router.get('/gym/profile', authMiddleware, requireRole('gym_owner', 'admin'), ge
 router.get('/gym/bookings', authMiddleware, requireRole('gym_owner', 'admin'), getGymBookings);
 router.post('/gym/services', authMiddleware, requireRole('gym_owner', 'admin'), manageGymServices);
 router.post('/gym/featured', authMiddleware, requireRole('gym_owner', 'admin'), createFeaturedListing);
+router.get('/gym/users/search', authMiddleware, requireRole('gym_owner', 'admin'), searchUsers);
 
 // Gym time slots
 router.get('/gym/slots', authMiddleware, requireRole('gym_owner', 'admin'), getTimeSlots);

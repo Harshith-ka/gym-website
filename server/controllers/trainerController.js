@@ -290,3 +290,46 @@ export const getTrainerProfile = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch profile' });
     }
 };
+
+// Update Trainer Profile
+export const updateTrainerProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { bio, hourly_rate, specializations, certifications, experience_years, is_active } = req.body;
+
+        const result = await pool.query(
+            `UPDATE trainers 
+             SET bio = $1, 
+                 hourly_rate = $2, 
+                 specializations = $3, 
+                 certifications = $4, 
+                 experience_years = $5, 
+                 is_active = $6,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE user_id = $7
+             RETURNING *`,
+            [
+                bio,
+                hourly_rate,
+                specializations,
+                certifications,
+                experience_years,
+                is_active,
+                userId
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Trainer profile not found' });
+        }
+
+        res.json({
+            message: 'Profile updated successfully',
+            trainer: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Update trainer profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+};

@@ -9,10 +9,9 @@ const api = axios.create({
     },
 });
 
-// Add Clerk session token to requests
+// Add Firebase session token to requests
 api.interceptors.request.use(async (config) => {
-    // Token will be added by Clerk's useAuth hook when making requests
-    // This is handled in the component level
+    // Token will be added by our AuthContext/hooks when making requests
     return config;
 });
 
@@ -21,7 +20,6 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Clerk handles redirects
             console.error('Unauthorized request');
         }
         return Promise.reject(error);

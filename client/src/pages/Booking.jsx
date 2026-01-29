@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Check, ArrowRight } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
 export default function Booking() {
     const { gymId } = useParams();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { getToken } = useAuth();
-    const { user } = useUser();
+    const { user } = useAuth();
+    const getToken = async () => {
+        if (!user) return null;
+        return await user.getIdToken();
+    };
 
     const [gym, setGym] = useState(null);
     const [services, setServices] = useState([]);
@@ -175,9 +178,9 @@ export default function Booking() {
                     }
                 },
                 prefill: {
-                    ...(user?.fullName || user?.firstName ? { name: user.fullName || user.firstName } : {}),
-                    ...(user?.primaryEmailAddress?.emailAddress ? { email: user.primaryEmailAddress.emailAddress } : {}),
-                    ...(user?.primaryPhoneNumber?.phoneNumber ? { contact: user.primaryPhoneNumber.phoneNumber } : {})
+                    ...(user?.displayName ? { name: user.displayName } : {}),
+                    ...(user?.email ? { email: user.email } : {}),
+                    ...(user?.phoneNumber ? { contact: user.phoneNumber } : {})
                 },
                 theme: { color: '#13ec5b' },
                 retry: {

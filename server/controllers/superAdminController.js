@@ -397,7 +397,7 @@ export const createSponsoredAd = async (req, res) => {
 
 export const addTrainerToGym = async (req, res) => {
     try {
-        const { user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate } = req.body;
+        const { user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate, profile_image } = req.body;
 
         if (!user_id || !gym_id) {
             return res.status(400).json({ error: 'User ID and Gym ID are required' });
@@ -405,6 +405,9 @@ export const addTrainerToGym = async (req, res) => {
 
         // Check if trainer profile already exists
         const existing = await pool.query('SELECT id FROM trainers WHERE user_id = $1', [user_id]);
+
+        const specs = Array.isArray(specializations) ? specializations : (specializations ? specializations.split(',').map(s => s.trim()) : []);
+        const certs = Array.isArray(certifications) ? certifications : (certifications ? certifications.split(',').map(c => c.trim()) : []);
 
         let result;
         if (existing.rows.length > 0) {
@@ -416,17 +419,18 @@ export const addTrainerToGym = async (req, res) => {
                     experience_years = COALESCE($4, experience_years),
                     certifications = COALESCE($5, certifications),
                     hourly_rate = COALESCE($6, hourly_rate),
+                    profile_images = CASE WHEN $7::text IS NOT NULL THEN ARRAY[$7] ELSE profile_images END,
                     is_active = true
-                WHERE user_id = $7 RETURNING *`,
-                [gym_id, bio, specializations, experience_years, certifications, hourly_rate, user_id]
+                WHERE user_id = $8 RETURNING *`,
+                [gym_id, bio, specs, experience_years, certs, hourly_rate, profile_image, user_id]
             );
         } else {
             result = await pool.query(
                 `INSERT INTO trainers (
-                    user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate, profile_images
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *`,
-                [user_id, gym_id, bio, specializations, experience_years, certifications, hourly_rate]
+                [user_id, gym_id, bio, specs, experience_years, certs, hourly_rate, profile_image ? [profile_image] : null]
             );
         }
 
@@ -437,5 +441,88 @@ export const addTrainerToGym = async (req, res) => {
     } catch (error) {
         console.error('Admin add trainer error:', error);
         res.status(500).json({ error: 'Failed to assign trainer' });
+    }
+};
+
+export const createGymAndOwner = async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const {
+            ownerName,
+            ownerEmail,
+            gymName,
+            address,
+            city,
+            state,
+            pincode,
+            phone,
+            email,
+            categories,
+            images,
+            amountPerSession
+        } = req.body;
+
+        if (!ownerName || !ownerEmail || !gymName || !address || !city) {
+            return res.status(400).json({ error: 'Required fields missing' });
+        }
+
+        await client.query('BEGIN');
+
+        // 1. Find or create user
+        let userResult = await client.query(
+            'SELECT id FROM users WHERE email = $1',
+            [ownerEmail]
+        );
+
+        let userId;
+        if (userResult.rows.length > 0) {
+            userId = userResult.rows[0].id;
+            // Update role to gym_owner if it was just a user
+            await client.query(
+                "UPDATE users SET role = 'gym_owner' WHERE id = $1 AND role = 'user'",
+                [userId]
+            );
+        } else {
+            // Create new user record
+            const newUser = await client.query(
+                "INSERT INTO users (name, email, role, is_verified) VALUES ($1, $2, 'gym_owner', true) RETURNING id",
+                [ownerName, ownerEmail]
+            );
+            userId = newUser.rows[0].id;
+        }
+
+        // 2. Create gym
+        const gymResult = await client.query(
+            `INSERT INTO gyms (
+                owner_id, name, address, city, state, pincode, phone, email, categories, images, is_approved
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
+            RETURNING *`,
+            [userId, gymName, address, city, state, pincode, phone, email, categories, images]
+        );
+
+        const gymId = gymResult.rows[0].id;
+
+        // 3. Create default session service if amountPerSession is provided
+        if (amountPerSession) {
+            await client.query(
+                `INSERT INTO gym_services (gym_id, service_type, name, description, price, duration_hours, is_active)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [gymId, 'session', 'Standard Session', 'Default booking session', amountPerSession, 1, true]
+            );
+        }
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            message: 'Gym, Owner and Default Service created successfully',
+            user: { id: userId, email: ownerEmail },
+            gym: gymResult.rows[0]
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Create gym and owner error:', error);
+        res.status(500).json({ error: 'Failed to create gym and owner: ' + error.message });
+    } finally {
+        client.release();
     }
 };
