@@ -99,7 +99,7 @@ export default function MultiImageUpload({ onImagesChange, currentImages = [], l
                         />
                         {uploading ? (
                             <div style={styles.uploadContent}>
-                                <Loader2 className="spinner" size={24} color="#8B5CF6" />
+                                <Loader2 className="spinner" size={24} color="#ef4444" />
                                 <span style={styles.uploadText}>Uploading...</span>
                             </div>
                         ) : (
@@ -176,7 +176,7 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s',
-        ':hover': { borderColor: '#8B5CF6', background: '#1a1a1a' }
+        ':hover': { borderColor: '#ef4444', background: '#1a1a1a' }
     },
     uploadContent: {
         display: 'flex',

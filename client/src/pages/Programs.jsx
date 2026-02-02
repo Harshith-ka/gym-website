@@ -7,10 +7,10 @@ const programs = [
         id: 'workout',
         title: "Strength & Muscle",
         description: "Build lean muscle and increase your functional strength with our power-focused programs.",
-        icon: <Zap size={32} color="#8B5CF6" />,
+        icon: <Zap size={32} color="#DC2626" />,
         image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1470&auto=format&fit=crop",
         features: ["Hypertrophy training", "Powerlifting basics", "Compound movements"],
-        color: "#8B5CF6"
+        color: "#DC2626"
     },
     {
         id: 'cardio',
@@ -109,7 +109,7 @@ const styles = {
         marginBottom: '6rem',
     },
     badge: {
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 700,
         fontSize: '0.8rem',
         textTransform: 'uppercase',

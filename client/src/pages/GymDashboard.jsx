@@ -666,7 +666,7 @@ export default function GymDashboard() {
                                         <StatCard
                                             label="Total Bookings"
                                             value={stats.totalBookings || 0}
-                                            icon={<Calendar size={24} color="#8B5CF6" />}
+                                            icon={<Calendar size={24} color="#ef4444" />}
                                         />
                                         <StatCard
                                             label="Active Slots"
@@ -926,7 +926,7 @@ export default function GymDashboard() {
                                                     <div key={service.id} style={styles.serviceCard}>
                                                         <div style={styles.serviceHeader}>
                                                             <div style={styles.serviceIcon}>
-                                                                <Dumbbell size={24} color="#8B5CF6" />
+                                                                <Dumbbell size={24} color="#ef4444" />
                                                             </div>
                                                             <button onClick={() => handleDeleteService(service.id)} style={styles.deleteBtn}>
                                                                 <X size={16} />
@@ -1112,7 +1112,7 @@ export default function GymDashboard() {
                                                                     <div style={{
                                                                         height: `${height}%`,
                                                                         width: '30px',
-                                                                        background: 'linear-gradient(to top, #8B5CF6, #A78BFA)',
+                                                                        background: 'linear-gradient(to top, #ef4444, #fca5a5)',
                                                                         borderRadius: '4px 4px 0 0',
                                                                         minHeight: '4px'
                                                                     }}></div>
@@ -1124,8 +1124,8 @@ export default function GymDashboard() {
                                                 </div>
 
                                                 {/* Insights Summary */}
-                                                <div style={{ gridColumn: '1 / -1', background: 'rgba(139, 92, 246, 0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px dashed #8B5CF6' }}>
-                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#A78BFA', marginBottom: '0.5rem' }}>Insights</h3>
+                                                <div style={{ gridColumn: '1 / -1', background: 'rgba(239, 68, 68, 0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px dashed #ef4444' }}>
+                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fca5a5', marginBottom: '0.5rem' }}>Insights</h3>
                                                     <p style={{ color: '#a1a1aa', margin: 0 }}>
                                                         Based on your data, <strong>{analytics.dailyBookings.sort((a, b) => b.count - a.count)[0]?.day}</strong> is your busiest day.
                                                         Consider offering a special promotion on slower days to maximize slot utilization!
@@ -1805,10 +1805,10 @@ const styles = {
         alignItems: 'center',
         gap: '0.5rem',
         padding: '0.6rem 1.25rem',
-        background: 'rgba(139, 92, 246, 0.1)',
-        border: '1px solid #8B5CF6',
+        background: 'rgba(239, 68, 68, 0.1)',
+        border: '1px solid #ef4444',
         borderRadius: '999px',
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontSize: '0.875rem',
         fontWeight: 600,
         cursor: 'pointer',
@@ -1912,8 +1912,8 @@ const styles = {
         marginBottom: '2rem',
     },
     featuredBanner: {
-        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.1))',
-        border: '1px solid rgba(139, 92, 246, 0.3)',
+        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1))',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
         borderRadius: '1rem',
         padding: '1.5rem',
         marginBottom: '2rem',

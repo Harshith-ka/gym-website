@@ -14,11 +14,11 @@
   --primary-dark: #e5e5e5;
   --primary-light: #ffffff;
   --secondary: #a1a1aa;
-  --accent: #8B5CF6;
-  /* Keep purple as accent */
+  --accent: #ef4444;
+  /* Red accent */
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #111 0%, #333 100%);
+  --gradient-primary: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   --gradient-hero: linear-gradient(to right, #1a1a1a, #0a0a0a);
 
   /* Backgrounds */
@@ -272,7 +272,7 @@ a:hover {
 .input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
 .input::placeholder {
@@ -1190,8 +1190,8 @@ input:checked+.toggle-switch::before {
 
 /* ===== CORE PAGE REDESIGN UTILITIES ===== */
 .hero-gradient {
-  background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.05), transparent 40%);
+  background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.15), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(239, 68, 68, 0.05), transparent 40%);
   position: relative;
 }
 
@@ -1248,7 +1248,7 @@ input:checked+.toggle-switch::before {
 }
 
 .support-nav-item.active {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(239, 68, 68, 0.1);
   color: var(--primary);
   font-weight: 600;
 }
@@ -1321,9 +1321,9 @@ input:checked+.toggle-switch::before {
 }
 
 .contact-card-dark .input:focus {
-  border-color: #8B5CF6;
+  border-color: #ef4444;
   background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
   outline: none;
 }
 
@@ -1348,7 +1348,7 @@ input:checked+.toggle-switch::before {
 }
 
 .office-links a {
-  color: #8B5CF6;
+  color: #ef4444;
   text-decoration: none;
   display: block;
   margin-top: 0.4rem;
@@ -1365,12 +1365,12 @@ input:checked+.toggle-switch::before {
 }
 
 .contact-submit-btn {
-  background: #8B5CF6 !important;
+  background: #ef4444 !important;
   color: white !important;
   padding: 1.25rem !important;
   font-weight: 700 !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2) !important;
+  box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2) !important;
   border: none !important;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1381,7 +1381,7 @@ input:checked+.toggle-switch::before {
 .contact-submit-btn:hover {
   background: #7c3aed !important;
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 15px 25px rgba(239, 68, 68, 0.3) !important;
 }
 
 .map-container-dark {
@@ -1696,8 +1696,8 @@ input:checked+.toggle-switch::before {
 }
 
 .pricing-card.featured {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.02) 100%);
-  border-color: rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .pricing-card.featured::before {

@@ -189,7 +189,7 @@ const styles = {
         justifyContent: 'center',
     },
     catBadge: {
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 700,
         fontSize: '0.8rem',
         textTransform: 'uppercase',

@@ -207,7 +207,7 @@ const styles = {
         maxWidth: '280px',
     },
     ctaBanner: {
-        background: 'linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.05))',
+        background: 'linear-gradient(to bottom, transparent, rgba(239, 68, 68, 0.05))',
         padding: '8rem 0',
         textAlign: 'center',
     },

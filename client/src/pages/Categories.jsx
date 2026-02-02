@@ -4,7 +4,7 @@ import { ArrowRight, Dumbbell, Heart, Play, Award, TrendingUp } from 'lucide-rea
 
 export default function Categories() {
     const categories = [
-        { name: 'Workout', desc: 'High-intensity strength and cardio training for all levels.', image: '/src/assets/categories/category_workout_1768968216853.png', color: '#8B5CF6', area: 'workout' },
+        { name: 'Workout', desc: 'High-intensity strength and cardio training for all levels.', image: '/src/assets/categories/category_workout_1768968216853.png', color: '#DC2626', area: 'workout' },
         { name: 'Yoga', desc: 'Find your balance and flexibility with our expert-led yoga sessions.', image: '/src/assets/categories/category_yoga_1768968232399.png', color: '#06B6D4', area: 'yoga' },
         { name: 'Dance', desc: 'Express yourself and stay fit with our energetic dance classes.', image: '/src/assets/categories/category_dance_1768968250236.png', color: '#EC4899', area: 'dance' },
         { name: 'Zumba', desc: 'Party yourself into shape with our rhythm-based cardio workouts.', image: '/src/assets/categories/category_zumba_1768968273976.png', color: '#F59E0B', area: 'zumba' },
@@ -112,7 +112,7 @@ const styles = {
         display: 'block',
         fontSize: '0.875rem',
         fontWeight: 600,
-        color: '#8B5CF6',
+        color: '#ef4444',
         textTransform: 'uppercase',
         letterSpacing: '2px',
         marginBottom: '1rem',

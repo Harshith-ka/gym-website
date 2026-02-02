@@ -259,7 +259,7 @@ export default function Trainers() {
                 .trainer-card-hover:hover {
                     transform: translateY(-8px);
                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
-                    border-color: rgba(139, 92, 246, 0.3) !important;
+                    border-color: rgba(239, 68, 68, 0.3) !important;
                 }
                 .trainer-card-hover:hover img {
                     transform: scale(1.05);
@@ -311,7 +311,7 @@ const styles = {
         right: 0,
         bottom: 0,
         left: 0,
-        background: 'radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 40%)',
+        background: 'radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.1) 0%, transparent 40%)',
         zIndex: 1,
     },
     container: {
@@ -491,7 +491,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.3rem',
-        background: 'rgba(139, 92, 246, 0.1)',
+        background: 'rgba(239, 68, 68, 0.1)',
         color: 'var(--accent)',
         padding: '0.2rem 0.5rem',
         borderRadius: '0.5rem',

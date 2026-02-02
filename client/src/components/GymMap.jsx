@@ -11,13 +11,13 @@ const customMarkerIcon = L.divIcon({
             position: relative;
             width: 40px;
             height: 40px;
-            background: #8B5CF6;
+            background: #ef4444;
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
             border: 2px solid white;
         ">
             <div style="
@@ -137,15 +137,15 @@ const styles = {
         gap: '8px',
     },
     statusBadge: {
-        background: 'rgba(139, 92, 246, 0.2)',
-        color: '#8B5CF6',
+        background: 'rgba(239, 68, 68, 0.2)',
+        color: '#ef4444',
         fontSize: '0.65rem',
         fontWeight: 700,
         padding: '2px 8px',
         borderRadius: '999px',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
-        border: '1px solid rgba(139, 92, 246, 0.3)',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
     }
 };
 

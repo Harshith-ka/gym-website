@@ -9,7 +9,7 @@ export default function PendingApproval() {
         <div style={styles.container}>
             <div style={styles.card}>
                 <div style={styles.iconWrapper}>
-                    <Clock size={48} color="#8B5CF6" />
+                    <Clock size={48} color="#ef4444" />
                 </div>
                 <h1 style={styles.title}>Registration Pending</h1>
                 <p style={styles.text}>
@@ -94,8 +94,8 @@ const styles = {
         width: '20px',
         height: '20px',
         borderRadius: '50%',
-        background: '#8B5CF6',
-        boxShadow: '0 0 0 rgba(139, 92, 246, 0.4)',
+        background: '#ef4444',
+        boxShadow: '0 0 0 rgba(239, 68, 68, 0.4)',
         animation: 'pulse 2s infinite',
     },
     note: {

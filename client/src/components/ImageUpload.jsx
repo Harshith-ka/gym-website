@@ -80,7 +80,7 @@ export default function ImageUpload({ onUploadSuccess, currentImage, label = "Up
             <div
                 style={{
                     ...styles.uploadBox,
-                    borderColor: error ? '#ef4444' : (preview ? '#8B5CF6' : '#333')
+                    borderColor: error ? '#ef4444' : (preview ? '#ef4444' : '#333')
                 }}
                 onClick={triggerUpload}
             >
@@ -94,7 +94,7 @@ export default function ImageUpload({ onUploadSuccess, currentImage, label = "Up
 
                 {uploading ? (
                     <div style={styles.statusBox}>
-                        <Loader2 className="spinner" size={24} color="#8B5CF6" />
+                        <Loader2 className="spinner" size={24} color="#ef4444" />
                         <span style={styles.statusText}>Uploading...</span>
                     </div>
                 ) : preview ? (
@@ -160,7 +160,7 @@ const styles = {
     },
     statusText: {
         fontSize: '0.875rem',
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 500,
     },
     previewContainer: {
@@ -195,7 +195,7 @@ const styles = {
         width: '32px',
         height: '32px',
         borderRadius: '50%',
-        background: '#8B5CF6',
+        background: '#ef4444',
         color: 'white',
         display: 'flex',
         alignItems: 'center',

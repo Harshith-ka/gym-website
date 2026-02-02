@@ -242,7 +242,7 @@ export default function UserDashboard() {
                     </div>
                     {latestMetric && (
                         <div style={styles.statCard}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(139, 92, 246, 0.2)', color: '#A78BFA' }}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5' }}>
                                 <Activity size={24} />
                             </div>
                             <div>

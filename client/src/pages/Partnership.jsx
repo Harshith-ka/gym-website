@@ -30,7 +30,7 @@ export default function Partnership() {
             title: "Grow Your Business",
             desc: "Reach thousands of fitness enthusiasts in your area and fill your off-peak hours with new customers.",
             icon: <TrendingUp size={24} />,
-            color: "#8B5CF6"
+            color: "#ef4444"
         },
         {
             title: "Verified Community",
@@ -174,7 +174,7 @@ const styles = {
     hero: {
         paddingTop: '8rem',
         paddingBottom: '6rem',
-        background: 'radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%)',
+        background: 'radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 40%)',
     },
     heroContainer: {
         display: 'grid',
@@ -189,7 +189,7 @@ const styles = {
         display: 'block',
         fontSize: '0.875rem',
         fontWeight: 700,
-        color: '#8B5CF6',
+        color: '#ef4444',
         textTransform: 'uppercase',
         letterSpacing: '3px',
         marginBottom: '1.5rem',
@@ -353,7 +353,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        color: '#8B5CF6',
+        color: '#ef4444',
         textDecoration: 'none',
         fontWeight: 700,
         fontSize: '1.1rem',
@@ -368,7 +368,7 @@ const styles = {
         padding: '6rem 4rem',
         background: 'linear-gradient(to bottom right, #0D0D0D, #000)',
         borderRadius: '4rem',
-        border: '1px solid rgba(139, 92, 246, 0.2)',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
     },
     ctaTitle: {
         fontSize: '3.5rem',
@@ -383,7 +383,7 @@ const styles = {
         marginBottom: '3.5rem',
     },
     ctaBtn: {
-        background: '#8B5CF6',
+        background: '#ef4444',
         color: 'white',
         padding: '1.5rem 4rem',
         borderRadius: '16px',
@@ -392,6 +392,6 @@ const styles = {
         fontSize: '1.1rem',
         display: 'inline-block',
         transition: 'all 0.3s',
-        boxShadow: '0 20px 40px rgba(139, 92, 246, 0.3)',
+        boxShadow: '0 20px 40px rgba(239, 68, 68, 0.3)',
     }
 };

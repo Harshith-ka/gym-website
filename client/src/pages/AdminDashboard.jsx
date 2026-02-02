@@ -198,7 +198,7 @@ export default function AdminDashboard() {
         <div style={styles.container}>
             <aside className="dashboard-sidebar admin-sidebar" style={styles.sidebar}>
                 <div style={styles.logo}>
-                    <span style={{ color: '#8B5CF6' }}>Super</span>Admin
+                    <span style={{ color: '#ef4444' }}>Super</span>Admin
                 </div>
                 <div className="dashboard-tab-list" style={styles.tabList}>
                     <TabButton id="overview" label="Overview" icon={BarChart3} />
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                         {activeTab === 'overview' && stats && (
                             <div className="grid grid-4">
                                 <StatCard label="Total Users" value={stats.totalUsers} icon={<Users size={24} color="#3B82F6" />} />
-                                <StatCard label="Total Gyms" value={stats.totalGyms} icon={<Building2 size={24} color="#8B5CF6" />} />
+                                <StatCard label="Total Gyms" value={stats.totalGyms} icon={<Building2 size={24} color="#ef4444" />} />
                                 <StatCard label="Total Bookings" value={stats.totalBookings} icon={<Calendar size={24} color="#10B981" />} />
                                 <StatCard label="Revenue" value={`₹${stats.totalRevenue}`} icon={<DollarSign size={24} color="#F59E0B" />} />
                             </div>
@@ -581,7 +581,7 @@ export default function AdminDashboard() {
                                         <option value="system">System Alert</option>
                                         <option value="promotion">Promotion</option>
                                     </select>
-                                    <button type="submit" style={{ ...styles.btn, width: 'auto', padding: '0 2rem', background: '#8B5CF6' }}>
+                                    <button type="submit" style={{ ...styles.btn, width: 'auto', padding: '0 2rem', background: '#ef4444' }}>
                                         <Send size={18} style={{ marginRight: '0.5rem' }} /> Broadcast Now
                                     </button>
                                 </form>
@@ -679,7 +679,7 @@ export default function AdminDashboard() {
                                     <input id="ad-pricing" name="pricing" type="number" placeholder="Pricing (₹)" style={styles.input} required />
                                     <input id="ad-start" name="start_date" type="date" style={styles.input} required />
                                     <input id="ad-end" name="end_date" type="date" style={styles.input} required />
-                                    <button type="submit" style={{ gridColumn: 'span 2', ...styles.btn, width: 'auto', background: '#8B5CF6' }}>Create Ad</button>
+                                    <button type="submit" style={{ gridColumn: 'span 2', ...styles.btn, width: 'auto', background: '#ef4444' }}>Create Ad</button>
                                 </form>
                             </div>
                         )}
@@ -689,7 +689,7 @@ export default function AdminDashboard() {
                                 <h3 style={styles.subTitle}>Register New Gym & Owner</h3>
                                 <form onSubmit={handleCreateGym} style={{ ...styles.form, marginTop: '2rem' }}>
                                     <div style={{ borderBottom: '1px solid #333', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                                        <h4 style={{ color: '#8B5CF6', marginBottom: '1rem' }}>Owner Information</h4>
+                                        <h4 style={{ color: '#ef4444', marginBottom: '1rem' }}>Owner Information</h4>
                                         <div style={styles.grid2}>
                                             <div style={styles.inputGroup}>
                                                 <label>Full Name</label>
@@ -714,7 +714,7 @@ export default function AdminDashboard() {
                                     </div>
 
                                     <div style={{ paddingBottom: '1rem' }}>
-                                        <h4 style={{ color: '#8B5CF6', marginBottom: '1rem' }}>Gym Details</h4>
+                                        <h4 style={{ color: '#ef4444', marginBottom: '1rem' }}>Gym Details</h4>
                                         <div style={styles.grid2}>
                                             <div style={styles.inputGroup}>
                                                 <label>Gym Name</label>
@@ -801,7 +801,7 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    <button type="submit" style={{ ...styles.btn, background: '#8B5CF6', padding: '1rem', width: '100%', fontSize: '1rem' }}>
+                                    <button type="submit" style={{ ...styles.btn, background: '#ef4444', padding: '1rem', width: '100%', fontSize: '1rem' }}>
                                         Create Gym & Account
                                     </button>
                                 </form>
@@ -854,7 +854,7 @@ export default function AdminDashboard() {
                                         <label>Support Phone</label>
                                         <input name="contact_phone" defaultValue={systemSettings.contact_phone} style={styles.input} />
                                     </div>
-                                    <button type="submit" style={{ ...styles.btn, width: 'auto', background: '#8B5CF6' }}>Update Settings</button>
+                                    <button type="submit" style={{ ...styles.btn, width: 'auto', background: '#ef4444' }}>Update Settings</button>
                                 </form>
                             </div>
                         )}

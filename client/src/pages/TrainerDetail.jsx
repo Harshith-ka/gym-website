@@ -96,7 +96,7 @@ export default function TrainerDetail() {
                     ...(user?.email ? { email: user.email } : {}),
                     ...(user?.phoneNumber ? { contact: user.phoneNumber } : {})
                 },
-                theme: { color: '#8B5CF6' },
+                theme: { color: '#ef4444' },
                 retry: {
                     enabled: true,
                     max_count: 3
@@ -586,7 +586,7 @@ const styles = {
         fontSize: '0.75rem',
         fontWeight: 800,
         letterSpacing: '0.1em',
-        boxShadow: '0 5px 15px rgba(139, 92, 246, 0.4)',
+        boxShadow: '0 5px 15px rgba(239, 68, 68, 0.4)',
         display: 'flex',
         alignItems: 'center',
         gap: '0.4rem',
@@ -612,7 +612,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        background: 'rgba(139, 92, 246, 0.1)',
+        background: 'rgba(239, 68, 68, 0.1)',
         color: 'var(--accent)',
         padding: '0.5rem 1rem',
         borderRadius: 'var(--radius-full)',
@@ -737,8 +737,8 @@ const styles = {
     },
     certItem: {
         padding: '0.8rem 1.2rem',
-        background: 'rgba(139, 92, 246, 0.05)',
-        border: '1px solid rgba(139, 92, 246, 0.2)',
+        background: 'rgba(239, 68, 68, 0.05)',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
         borderRadius: 'var(--radius-lg)',
         display: 'flex',
         alignItems: 'center',
@@ -921,7 +921,7 @@ const styles = {
         padding: '1.25rem',
         fontSize: '1.1rem',
         gap: '0.75rem',
-        boxShadow: '0 10px 20px rgba(139, 92, 246, 0.3)',
+        boxShadow: '0 10px 20px rgba(239, 68, 68, 0.3)',
     },
     bookingFineprint: {
         fontSize: '0.75rem',
@@ -931,9 +931,9 @@ const styles = {
     },
     helpCard: {
         padding: '1.5rem',
-        background: 'rgba(139, 92, 246, 0.05)',
+        background: 'rgba(239, 68, 68, 0.05)',
         borderRadius: '1.5rem',
-        border: '1px solid rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(239, 68, 68, 0.1)',
         display: 'flex',
         gap: '1rem',
         alignItems: 'flex-start',

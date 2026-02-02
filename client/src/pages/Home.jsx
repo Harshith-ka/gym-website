@@ -78,7 +78,7 @@ export default function Home() {
     };
 
     const categories = [
-        { name: 'Workout', desc: 'High-intensity strength and cardio training for all levels.', image: '/src/assets/categories/category_workout_1768968216853.png', color: '#8B5CF6' },
+        { name: 'Workout', desc: 'High-intensity strength and cardio training for all levels.', image: '/src/assets/categories/category_workout_1768968216853.png', color: '#DC2626' },
         { name: 'Yoga', desc: 'Find your balance and flexibility with our expert-led yoga sessions.', image: '/src/assets/categories/category_yoga_1768968232399.png', color: '#06B6D4' },
         { name: 'Dance', desc: 'Express yourself and stay fit with our energetic dance classes.', image: '/src/assets/categories/category_dance_1768968250236.png', color: '#EC4899' },
         { name: 'Zumba', desc: 'Party yourself into shape with our rhythm-based cardio workouts.', image: '/src/assets/categories/category_zumba_1768968273976.png', color: '#F59E0B' },
@@ -275,7 +275,7 @@ export default function Home() {
                     <div style={styles.whyHeader}>
                         <span style={styles.whyBadge}>WHY CHOOSE US</span>
                         <h2 style={styles.whyTitle}>
-                            Why <span style={{ color: '#8B5CF6' }}>FitBook</span> is The <br />
+                            Why <span style={{ color: '#ef4444' }}>FitBook</span> is The <br />
                             Right Choice for You
                         </h2>
                     </div>
@@ -284,7 +284,7 @@ export default function Home() {
                         {/* Expert Instructors */}
                         <div style={{ ...styles.whyCardSmall, gridArea: 's1' }}>
                             <div style={styles.whyIconCircle}>
-                                <Users size={24} color="#8B5CF6" />
+                                <Users size={24} color="#ef4444" />
                             </div>
                             <h3 style={styles.whyCardTitle}>Expert Personal Trainers</h3>
                             <p style={styles.whyCardText}>
@@ -295,7 +295,7 @@ export default function Home() {
                         {/* Certified Trainers */}
                         <div style={{ ...styles.whyCardSmall, gridArea: 's2' }}>
                             <div style={styles.whyIconCircle}>
-                                <Award size={24} color="#8B5CF6" />
+                                <Award size={24} color="#ef4444" />
                             </div>
                             <h3 style={styles.whyCardTitle}>Certified Fitness Programs</h3>
                             <p style={styles.whyCardText}>
@@ -323,7 +323,7 @@ export default function Home() {
                         {/* 100+ High Impact Sessions (Wide Card) */}
                         <div style={styles.whyCardWide}>
                             <div style={styles.whyIconCircle}>
-                                <Dumbbell size={24} color="#8B5CF6" />
+                                <Dumbbell size={24} color="#ef4444" />
                             </div>
                             <h3 style={styles.whyCardTitle}>100+ Premium Gym Partners</h3>
                             <p style={styles.whyCardText}>
@@ -711,7 +711,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        color: '#8B5CF6',
+        color: '#ef4444',
         textDecoration: 'none',
         fontWeight: 600,
     },
@@ -728,7 +728,7 @@ const styles = {
         display: 'block',
         fontSize: '0.875rem',
         fontWeight: 600,
-        color: '#8B5CF6',
+        color: '#ef4444',
         textTransform: 'uppercase',
         letterSpacing: '2px',
         marginBottom: '1rem',
@@ -944,7 +944,7 @@ const styles = {
         width: '56px',
         height: '56px',
         borderRadius: '50%',
-        background: 'rgba(139, 92, 246, 0.1)',
+        background: 'rgba(239, 68, 68, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1020,7 +1020,7 @@ const styles = {
     resultSmallTitle: {
         fontSize: '1.25rem',
         fontWeight: 600,
-        color: '#8B5CF6',
+        color: '#ef4444',
         letterSpacing: '1px',
     },
     resultBigTitle: {
@@ -1060,7 +1060,7 @@ const styles = {
         justifyContent: 'center',
         flexShrink: 0,
         background: '#0A0A0A',
-        color: '#8B5CF6',
+        color: '#ef4444',
     },
     flowDashedLine: {
         flex: 1,
@@ -1115,12 +1115,12 @@ const styles = {
         width: '64px',
         height: '64px',
         borderRadius: '50%',
-        background: 'rgba(139, 92, 246, 0.2)',
+        background: 'rgba(239, 68, 68, 0.2)',
         backdropFilter: 'blur(5px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '1px solid #8B5CF6',
+        border: '1px solid #ef4444',
     },
     coachesContent: {
         display: 'flex',
@@ -1130,7 +1130,7 @@ const styles = {
     mentorSub: {
         fontSize: '1.125rem',
         fontWeight: 600,
-        color: '#8B5CF6',
+        color: '#ef4444',
         marginBottom: '1rem',
         letterSpacing: '1px',
     },
@@ -1149,7 +1149,7 @@ const styles = {
         maxWidth: '500px',
     },
     exploreMoreBtn: {
-        background: '#8B5CF6',
+        background: '#ef4444',
         color: 'white',
         padding: '1.25rem 2.5rem',
         borderRadius: '999px',
@@ -1177,7 +1177,7 @@ const styles = {
     reviewsSub: {
         fontSize: '1.125rem',
         fontWeight: 600,
-        color: '#8B5CF6',
+        color: '#ef4444',
         marginBottom: '1rem',
         letterSpacing: '2px',
     },
@@ -1227,7 +1227,7 @@ const styles = {
     },
     quoteIcon: {
         fontSize: '4rem',
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 900,
         lineHeight: 1,
         opacity: 0.3,
@@ -1261,7 +1261,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#8B5CF6',
+        background: '#ef4444',
         color: 'white',
         cursor: 'pointer',
     },
@@ -1328,7 +1328,7 @@ const styles = {
     reviewTargetGym: {
         marginTop: '1.5rem',
         fontSize: '0.875rem',
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 600,
         textTransform: 'uppercase',
     },

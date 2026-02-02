@@ -140,7 +140,7 @@ const styles = {
         width: '44px',
         height: '44px',
         borderRadius: '10px',
-        background: 'rgba(139, 92, 246, 0.1)',
+        background: 'rgba(239, 68, 68, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

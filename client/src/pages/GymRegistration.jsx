@@ -413,7 +413,7 @@ const styles = {
         alignItems: 'center',
         gap: '0.5rem',
         padding: '0.5rem 1rem',
-        background: 'rgba(139, 92, 246, 0.1)',
+        background: 'rgba(239, 68, 68, 0.1)',
         border: '1px solid var(--primary)',
         borderRadius: '999px',
         color: 'var(--primary)',

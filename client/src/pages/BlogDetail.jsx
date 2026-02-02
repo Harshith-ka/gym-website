@@ -114,7 +114,7 @@ const styles = {
         marginBottom: '3rem',
     },
     category: {
-        color: '#8B5CF6',
+        color: '#ef4444',
         fontWeight: 700,
         fontSize: '0.85rem',
         textTransform: 'uppercase',
