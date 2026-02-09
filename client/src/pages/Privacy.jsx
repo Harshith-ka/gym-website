@@ -75,7 +75,7 @@ export default function Privacy() {
                     <div style={styles.footerNote} className="section-glass">
                         <div style={styles.contactEmail}>
                             <Mail size={18} color="var(--primary)" />
-                            <span>Questions? Email <a href="mailto:privacy@purpulhue.com" style={{ color: 'white', fontWeight: 600 }}>privacy@purpulhue.com</a></span>
+                            <span>Questions? Email <a href="mailto:privacy@gymato.com" style={{ color: 'white', fontWeight: 600 }}>privacy@gymato.com</a></span>
                         </div>
                     </div>
                 </div>

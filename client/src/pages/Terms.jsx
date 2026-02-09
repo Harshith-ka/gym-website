@@ -6,12 +6,12 @@ export default function Terms() {
         {
             icon: <ShieldCheck size={20} />,
             title: "1. Acceptance of Terms",
-            content: "By accessing and using Purpul Hue, you accept and agree to be bound by the terms and provision of this agreement. Our platform is designed for peak performance, and by joining, you become part of an elite fitness community."
+            content: "By accessing and using Gymato, you accept and agree to be bound by the terms and provision of this agreement. Our platform is designed for peak performance, and by joining, you become part of an elite fitness community."
         },
         {
             icon: <FileText size={20} />,
             title: "2. Use License",
-            content: "Permission is granted to temporarily use Purpul Hue for personal, non-commercial purposes only. This includes accessing gym directories, booking training sessions, and viewing expert content. Any unauthorized reproduction of our data is strictly prohibited."
+            content: "Permission is granted to temporarily use Gymato for personal, non-commercial purposes only. This includes accessing gym directories, booking training sessions, and viewing expert content. Any unauthorized reproduction of our data is strictly prohibited."
         },
         {
             icon: <Scale size={20} />,
@@ -31,7 +31,7 @@ export default function Terms() {
         {
             icon: <Info size={20} />,
             title: "6. Limitation of Liability",
-            content: "While we partner with the best, Purpul Hue is a platform connecting users with third-party facilities. We are not liable for personal injury sustained during training; users should always consult with the on-site professionals."
+            content: "While we partner with the best, Gymato is a platform connecting users with third-party facilities. We are not liable for personal injury sustained during training; users should always consult with the on-site professionals."
         }
     ];
 
@@ -73,7 +73,7 @@ export default function Terms() {
                     ))}
 
                     <div style={styles.footerNote} className="section-glass">
-                        <p>Questions about our terms? Contact our <a href="mailto:legal@purpulhue.com" style={{ color: 'var(--primary)' }}>Legal Team</a>.</p>
+                        <p>Questions about our terms? Contact our <a href="mailto:legal@gymato.com" style={{ color: 'var(--primary)' }}>Legal Team</a>.</p>
                     </div>
                 </div>
             </div>

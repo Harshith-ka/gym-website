@@ -81,7 +81,7 @@ export default function AuthForm({ onSuccess, inModal = false }) {
                     </div>
                     <h2 style={styles.title}>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
                     <p style={styles.subtitle}>
-                        {isLogin ? 'Login to your Purpul Hue account' : 'Join the Purpul Hue community today'}
+                        {isLogin ? 'Login to your Gymato account' : 'Join the Gymato community today'}
                     </p>
                 </div>
             )}

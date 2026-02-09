@@ -42,7 +42,7 @@ export const sendBookingNotification = async (toEmail, bookingDetails) => {
 
                 <p>Please ensure the facility is ready for the customer.</p>
                 <br>
-                <p style="font-size: 12px; color: #888;">FitBook Automated Notification</p>
+                <p style="font-size: 12px; color: #888;">Gymato Automated Notification</p>
             </div>
         `
     };

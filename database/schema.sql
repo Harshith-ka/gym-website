@@ -268,7 +268,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 INSERT INTO system_settings (key, value, description) VALUES 
 ('platform_commission', '10', 'Percentage taken from each booking'),
 ('maintenance_mode', 'false', 'If true, blocks standard user access'),
-('support_email', 'support@fitbook.com', 'Contact email for support'),
+('support_email', 'support@gymato.com', 'Contact email for support'),
 ('featured_listing_price', '499', 'Daily price for featured gym listing');
 
 -- Create Indexes for Performance

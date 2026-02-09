@@ -53,7 +53,7 @@ export default function Partnership() {
                 <div className="container" style={styles.heroContainer}>
                     <div style={styles.heroContent} className="scroll-reveal">
                         <span style={styles.sectionLabel}>Empower Your Facility</span>
-                        <h1 style={styles.heroTitle}>Partner with Purpul Hue</h1>
+                        <h1 style={styles.heroTitle}>Partner with Gymato</h1>
                         <p style={styles.heroSubtitle}>
                             Join the fastest-growing fitness network. List your gym, manage bookings effortlessly,
                             and connect with thousands of local members looking for their next workout space.

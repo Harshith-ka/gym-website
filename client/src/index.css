@@ -1951,3 +1951,19 @@ input:checked+.toggle-switch::before {
     transform: none;
   }
 }
+
+.brand-typography {
+  font-family: 'Alfa Slab One', cursive;
+  color: #ff3b3b;
+  /* Vibrant Red */
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.brand-typography:hover {
+  color: #ef4444;
+  transform: scale(1.05);
+}

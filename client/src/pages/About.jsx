@@ -36,7 +36,7 @@ export default function About() {
                     <div style={styles.heroText}>
                         <h1 className="text-gradient" style={styles.heroTitle}>Our Story</h1>
                         <p style={styles.heroSub}>
-                            Purpul Hue started with a simple observation: finding high-quality, local fitness options shouldn't be a workout in itself.
+                            Gymato started with a simple observation: finding high-quality, local fitness options shouldn't be a workout in itself.
                         </p>
                         <div style={styles.heroActions}>
                             <Link to="/explore" className="btn btn-primary">Start Training</Link>
@@ -98,7 +98,7 @@ export default function About() {
                             What began as a small directory for local boxing clubs has evolved into a premier fitness ecosystem spanning multiple countries. We've spent the last 5 years building relationships with the most dedicated gym owners and trainers across India and internationally.
                         </p>
                         <p style={styles.storyText}>
-                            Today, Purpul Hue is more than just a booking app. It's a global partner in your journey—providing the tools, data, and community you need to reach your peak performance, whether you're in Mumbai, London, or New York.
+                            Today, Gymato is more than just a booking app. It's a global partner in your journey—providing the tools, data, and community you need to reach your peak performance, whether you're in Mumbai, London, or New York.
                         </p>
                         <div style={styles.globalBadge}>
                             <span style={styles.globalIcon}>🌍</span>
@@ -109,7 +109,7 @@ export default function About() {
                         </div>
                         <div style={styles.storyQuote} className="section-glass">
                             <p>"Our goal isn't just to help you find a gym; it's to help you find your purpose through physical excellence, no matter where you are in the world."</p>
-                            <span style={styles.quoteAuthor}>— Harshith, Founder of Purpul Hue</span>
+                            <span style={styles.quoteAuthor}>— pavan ramtej, Founder of Gymato</span>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ export default function About() {
                 <div style={styles.partnerGrid}>
                     <div style={styles.partnerContent}>
                         <span style={styles.tag}>For Gym Owners</span>
-                        <h2 style={styles.partnerTitle}>Scale Your Facility with Purpul Hue</h2>
+                        <h2 style={styles.partnerTitle}>Scale Your Facility with Gymato</h2>
                         <p style={styles.partnerText}>
                             Are you a gym owner looking to reach more customers? Partner with us to list your facility, manage bookings, and grow your community.
                         </p>

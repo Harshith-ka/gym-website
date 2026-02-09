@@ -11,7 +11,7 @@ export default function Footer() {
                     <div className="section-glass" style={styles.brandCard}>
                         <Link to="/" style={styles.logo}>
                             <Sparkles size={24} color="var(--primary)" />
-                            <span style={styles.logoText}>Purpul Hue</span>
+                            <span style={styles.logoText}>Gymato</span>
                         </Link>
                         <p style={styles.description}>
                             Your dedicated space to grow, transform, and thrive. Join a community of peak performers.
@@ -48,7 +48,7 @@ export default function Footer() {
                         <div style={styles.navCol}>
                             <h3 style={styles.title}>Support</h3>
                             <div style={styles.links}>
-                                <a href="mailto:hello@purpulhue.com" style={styles.link}>Help Center</a>
+                                <a href="mailto:hello@gymato.com" style={styles.link}>Help Center</a>
                                 <Link to="/how-it-works" style={styles.link}>Member FAQ</Link>
                                 <a href="#" style={styles.link}>Trainer Portal</a>
                                 <a href="#" style={styles.link}>Gym Partnership</a>
@@ -79,7 +79,7 @@ export default function Footer() {
 
                 <div style={styles.bottom}>
                     <div style={styles.bottomContent}>
-                        <p>&copy; {new Date().getFullYear()} Purpul Hue. Built for Athletes.</p>
+                        <p>&copy; {new Date().getFullYear()} Gymato. Built for Athletes.</p>
                         <div style={styles.legalLinks}>
                             <Link to="/terms" style={styles.legalLink}>Terms</Link>
                             <Link to="/privacy" style={styles.legalLink}>Privacy</Link>

@@ -65,9 +65,9 @@ export default function Contact() {
                         <div className="contact-info-item">
                             <h3>Email</h3>
                             <div className="office-links">
-                                <a href="mailto:hello@purpulhue.com">hello@purpulhue.com</a>
-                                <a href="mailto:business@purpulhue.com">business@purpulhue.com</a>
-                                <a href="mailto:support@purpulhue.com">support@purpulhue.com</a>
+                                <a href="mailto:hello@gymato.com">hello@gymato.com</a>
+                                <a href="mailto:business@gymato.com">business@gymato.com</a>
+                                <a href="mailto:support@gymato.com">support@gymato.com</a>
                             </div>
                         </div>
 

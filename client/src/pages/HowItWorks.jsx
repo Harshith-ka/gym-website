@@ -31,7 +31,7 @@ export default function HowItWorks() {
             {/* Hero */}
             <section style={styles.hero}>
                 <div className="container" style={styles.heroContent}>
-                    <h1 style={styles.heroTitle}>How FitBook Works</h1>
+                    <h1 style={styles.heroTitle}>How Gymato Works</h1>
                     <p style={styles.heroSubtitle}>
                         Book your perfect workout space in 4 simple steps
                     </p>

@@ -75,12 +75,9 @@ export default function Navbar() {
             }}
         >
             <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-                    <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '12px', display: 'flex' }}>
-                        <Sparkles size={22} color="white" />
-                    </div>
-                    <span style={{ color: 'white', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-1px' }}>
-                        Purpul Hue
+                <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                    <span className="brand-typography">
+                        GYMATO
                     </span>
                 </Link>
 
@@ -165,7 +162,7 @@ export default function Navbar() {
 
                     <div style={{ marginBottom: '2rem' }}>
                         <span style={{ color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem' }}>
-                            Explore Purpul Hue
+                            Explore Gymato
                         </span>
                     </div>
 

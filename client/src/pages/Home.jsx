@@ -131,7 +131,7 @@ export default function Home() {
                             Real Progress.
                         </h1>
                         <p style={styles.heroSubtitle}>
-                            At FitBook we believe fitness is for everybody. Our platform is your
+                            At Gymato we believe fitness is for everybody. Our platform is your
                             dedicated space to find the best gyms, transform, and thrive.
                         </p>
 
@@ -275,7 +275,7 @@ export default function Home() {
                     <div style={styles.whyHeader}>
                         <span style={styles.whyBadge}>WHY CHOOSE US</span>
                         <h2 style={styles.whyTitle}>
-                            Why <span style={{ color: '#ef4444' }}>FitBook</span> is The <br />
+                            Why <span style={{ color: '#ef4444' }}>Gymato</span> is The <br />
                             Right Choice for You
                         </h2>
                     </div>
@@ -310,7 +310,7 @@ export default function Home() {
                             </div>
                             <h2 style={styles.primaryCardTitle}>All-Day Gym Access</h2>
                             <p style={styles.primaryCardText}>
-                                At FitBook, we know life is busy. That's why we partner with gyms that offer 24/7 access, letting you train whenever your schedule allows.
+                                At Gymato, we know life is busy. That's why we partner with gyms that offer 24/7 access, letting you train whenever your schedule allows.
                             </p>
                             <p style={{ ...styles.primaryCardText, marginBottom: '2.5rem' }}>
                                 Find spaces that fit your lifestyle and keep your fitness journey moving forward without interruptions.
@@ -327,7 +327,7 @@ export default function Home() {
                             </div>
                             <h3 style={styles.whyCardTitle}>100+ Premium Gym Partners</h3>
                             <p style={styles.whyCardText}>
-                                FitBook connects you with over 100 top-rated fitness centers across the city. From boutique studios to massive powerlifting gyms, we have the perfect place for your workout.
+                                Gymato connects you with over 100 top-rated fitness centers across the city. From boutique studios to massive powerlifting gyms, we have the perfect place for your workout.
                             </p>
                         </div>
                     </div>
@@ -340,7 +340,7 @@ export default function Home() {
                     <div style={styles.resultHeader}>
                         <div style={styles.resultTitleCol}>
                             <span style={styles.resultSmallTitle}>TRANSFORM YOUR BODY</span>
-                            <h2 style={styles.resultBigTitle}>WITH FITBOOK</h2>
+                            <h2 style={styles.resultBigTitle}>WITH GYMATO</h2>
                         </div>
                         <div style={styles.resultDescCol}>
                             <p style={styles.resultDesc}>

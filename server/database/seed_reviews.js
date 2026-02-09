@@ -23,7 +23,7 @@ const seedReviews = async () => {
                 user_index: 1,
                 gym_index: 0,
                 rating: 5,
-                comment: "Best gym in the city! Clean, spacious, and great variety of machines. FitBook made booking so easy."
+                comment: "Best gym in the city! Clean, spacious, and great variety of machines. Gymato made booking so easy."
             },
             {
                 user_index: 2,

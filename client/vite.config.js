@@ -9,8 +9,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
             manifest: {
-                name: 'FitBook - Premium Gym Booking',
-                short_name: 'FitBook',
+                name: 'Gymato - Premium Gym Booking',
+                short_name: 'Gymato',
                 description: 'Find and book the best gyms near you.',
                 theme_color: '#000000',
                 background_color: '#000000',
