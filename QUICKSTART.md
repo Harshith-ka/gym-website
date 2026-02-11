@@ -9,16 +9,17 @@
 PORT=5000
 NODE_ENV=development
 
-# Database
+# Database (Local)
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=gym_booking
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Clerk Authentication
-CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+# Firebase Authentication (Admin SDK)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project-id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -30,13 +31,18 @@ RAZORPAY_KEY_ID=rzp_test_...
 RAZORPAY_KEY_SECRET=your_secret
 
 CLIENT_URL=http://localhost:5173
-PLATFORM_COMMISSION=10
 ```
 
 **Frontend** (`client/.env`):
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+# Add Firebase config if needed for client SDK
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
 
 ### 2. Setup Database
@@ -61,44 +67,43 @@ npm run dev
 **Terminal 2 - Frontend:**
 ```bash
 cd client
-npm install --legacy-peer-deps
+npm install
 npm run dev
 ```
 
 ## 📝 Get API Keys
 
-1. **Clerk**: [clerk.com](https://clerk.com) - Enable Email, Phone, Google OAuth
+1. **Firebase**: [console.firebase.google.com](https://console.firebase.google.com/) - Enable Email/Password & Google Auth
 2. **Razorpay**: [razorpay.com](https://razorpay.com) - Get test keys
 3. **Cloudinary**: [cloudinary.com](https://cloudinary.com) - Free account
 
 ## ✅ What's Implemented
 
 ### Backend (100%)
-- ✅ Clerk authentication
+- ✅ Firebase Authentication
 - ✅ All API endpoints (40+)
 - ✅ Payment integration
 - ✅ QR code system
-- ✅ Database schema
+- ✅ Database schema & seeding
 
-### Frontend (80%)
-- ✅ Home page
+### Frontend (95%)
+- ✅ Modern UI / Home page
 - ✅ Gym search & filters
-- ✅ Gym details
-- ✅ Booking flow
-- ✅ QR code display
-- ✅ User dashboard
-- ⏳ Trainer pages (placeholder)
-- ⏳ Gym dashboard (placeholder)
+- ✅ Gym details & maps
+- ✅ Booking flow & QR codes
+- ✅ User & Admin dashboards
+- ✅ Trainer system
+- ✅ Monetization flow
 
 ## 🎯 Next Steps
 
-1. Configure your API keys
+1. Configure your API keys in `.env` files
 2. Run the database setup
 3. Start both servers
 4. Visit http://localhost:5173
-5. Sign up with Clerk
+5. Sign up with Firebase
 6. Start exploring!
 
 ## 📚 Documentation
 
-See [README.md](file:///c:/Users/harsh/OneDrive/Desktop/Proj/gym-website/README.md) for detailed setup instructions.
+See [README.md](README.md) for detailed setup or [DEPLOYMENT.md](DEPLOYMENT.md) for production.

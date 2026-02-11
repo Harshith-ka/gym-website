@@ -4,8 +4,8 @@
 
 ### Prerequisites
 - Node.js 18+ installed
-- PostgreSQL database
-- Clerk account (for authentication)
+- PostgreSQL database (Local or Neon)
+- Firebase Account (for authentication)
 - Razorpay account (for payments)
 - Cloudinary account (for media storage)
 
@@ -23,16 +23,20 @@ Create a `.env` file in the `server` directory:
 PORT=5000
 NODE_ENV=development
 
-# Database
+# Database (Local)
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=gym_booking
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Clerk Authentication
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
+# Database (Production/Neon)
+# DATABASE_URL=postgresql://user:pass@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
+
+# Firebase Authentication (Admin SDK)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project-id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -45,12 +49,11 @@ RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 
 # Other
 CLIENT_URL=http://localhost:5173
-PLATFORM_COMMISSION=10
 ```
 
 3. **Setup Database**
 ```bash
-# Create database
+# Create database (If using local PostgreSQL)
 createdb gym_booking
 
 # Run schema
@@ -69,14 +72,20 @@ Server will run on `http://localhost:5000`
 1. **Install Dependencies**
 ```bash
 cd client
-npm install --legacy-peer-deps
+npm install
 ```
 
 2. **Configure Environment Variables**
 Create a `.env` file in the `client` directory:
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+# Add Firebase config if needed for client SDK
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
 
 3. **Start Development Server**
@@ -88,11 +97,12 @@ Frontend will run on `http://localhost:5173`
 
 ## 🔑 Getting API Keys
 
-### Clerk (Authentication)
-1. Go to [clerk.com](https://clerk.com)
-2. Create a new application
-3. Enable Email, Phone, and Google OAuth
-4. Copy your Publishable Key and Secret Key
+### Firebase (Authentication)
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project
+3. Enable **Email/Password** and **Google** sign-in in Authentication
+4. Go to Project Settings -> Service Accounts -> Generate New Private Key
+5. Copy project details to your backend `.env`
 
 ### Razorpay (Payments)
 1. Go to [razorpay.com](https://razorpay.com)
@@ -109,9 +119,9 @@ Frontend will run on `http://localhost:5173`
 ```
 gym-website/
 ├── server/               # Backend API
-│   ├── config/          # Database, payment configs
+│   ├── config/          # Database, payment, firebase configs
 │   ├── controllers/     # Business logic
-│   ├── middleware/      # Auth, validation
+│   ├── middleware/      # Auth, upload, validation
 │   ├── routes/          # API routes
 │   └── server.js        # Entry point
 ├── client/              # React frontend
@@ -121,31 +131,31 @@ gym-website/
 │   │   ├── services/    # API calls
 │   │   └── App.jsx      # Main app
 │   └── index.html
-└── database/            # SQL schemas
+└── database/            # SQL schemas & seeds
 ```
 
 ## 🎯 Features Implemented
 
-✅ **Authentication** - Clerk (Email, Phone, Google OAuth)
-✅ **User Management** - Profiles, wishlist, booking history
-✅ **Gym Search** - Advanced filters, nearby detection, categories
-✅ **Booking System** - QR codes, payment integration
+✅ **Authentication** - Firebase (Email, Google OAuth)
+✅ **User Management** - Profiles, Wishlist, Booking History
+✅ **Gym Search** - Advanced Filters, Nearby Detection, Categories
+✅ **Booking System** - QR Codes, Razorpay Payment Integration
 ✅ **Trainer Booking** - Session booking with payments
-✅ **Reviews & Ratings** - Verified reviews
-✅ **Admin Dashboard** - Gym approval, analytics
-✅ **Monetization** - Featured listings, commissions
+✅ **Reviews & Ratings** - Verified reviews system
+✅ **Admin Dashboard** - Gym Approval, User Management, Analytics
+✅ **Monetization** - Featured Listings, System Settings
 
 ## 🔧 Development
 
 - Backend runs on port 5000
 - Frontend runs on port 5173
-- Database uses PostgreSQL
-- All authentication handled by Clerk
+- Database uses PostgreSQL (Neon for Production)
+- All authentication handled by Firebase Admin SDK
 - Payments processed through Razorpay
 
 ## 📝 Notes
 
-- Make sure PostgreSQL is running before starting the server
-- Update Clerk settings to allow your localhost URL
+- Ensure PostgreSQL is running (or `DATABASE_URL` is set) before starting the server
 - Use Razorpay test mode for development
 - QR codes are generated for each booking for entry validation
+- Deployment instructions can be found in [DEPLOYMENT.md](DEPLOYMENT.md)
