@@ -28,7 +28,17 @@ services:
       - proxy_net
 
   frontend:
-    build: ./client
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: https://gymato.in/api
+        VITE_FIREBASE_API_KEY: AIzaSyB9jjZJIpGal8rZOBnXTgVUw9v44ey5i6w
+        VITE_FIREBASE_AUTH_DOMAIN: gymato-c9660.firebaseapp.com
+        VITE_FIREBASE_PROJECT_ID: gymato-c9660
+        VITE_FIREBASE_STORAGE_BUCKET: gymato-c9660.firebasestorage.app
+        VITE_FIREBASE_MESSAGING_SENDER_ID: "78336517175"
+        VITE_FIREBASE_APP_ID: 1:78336517175:web:28ac6af2a08394f3b9cbb2
+        VITE_FIREBASE_MEASUREMENT_ID: G-Y82GZ5R330
     container_name: gymato_frontend
     restart: always
     depends_on:
