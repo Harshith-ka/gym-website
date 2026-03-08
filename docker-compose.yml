@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gymato_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: gym_booking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Clokwalk@1234$
+    volumes:
+      - gymato_postgres_data:/var/lib/postgresql/data
+    networks:
+      - gymato_internal
+
+  backend:
+    build: ./server
+    container_name: gymato_backend
+    restart: always
+    env_file:
+      - ./server/.env
+    expose:
+      - "5000"
+    depends_on:
+      - postgres
+    networks:
+      - gymato_internal
+      - proxy_net
+
+  frontend:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: https://gymato.in/api
+        VITE_FIREBASE_API_KEY: AIzaSyB9jjZJIpGal8rZOBnXTgVUw9v44ey5i6w
+        VITE_FIREBASE_AUTH_DOMAIN: gymato-c9660.firebaseapp.com
+        VITE_FIREBASE_PROJECT_ID: gymato-c9660
+        VITE_FIREBASE_STORAGE_BUCKET: gymato-c9660.firebasestorage.app
+        VITE_FIREBASE_MESSAGING_SENDER_ID: "78336517175"
+        VITE_FIREBASE_APP_ID: 1:78336517175:web:28ac6af2a08394f3b9cbb2
+        VITE_FIREBASE_MEASUREMENT_ID: G-Y82GZ5R330
+    container_name: gymato_frontend
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - gymato_internal
+      - proxy_net
+
+volumes:
+  gymato_postgres_data:
+
+networks:
+  gymato_internal:
+  proxy_net:
+    external: true
